@@ -1,5 +1,6 @@
 export enum AutocompleteOptionType {
-  KEYWORD = 'KEYWORD',
-  COLUMN = 'COLUMN',
-  TABLE = 'TABLE'
+  KEYWORD = "KEYWORD",
+  COLUMN = "COLUMN",
+  TABLE = "TABLE",
+  SCHEMA = "SCHEMA",
 }
