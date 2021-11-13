@@ -6,3 +6,4 @@ export * from "./src/models/AutocompleteOption";
 export * from "./src/models/AutocompleteOptionType";
 export * from "./src/models/SimpleSQLTokenizer";
 export * from "./src/models/Schema";
+export * from "./src/models/SQLDialect";

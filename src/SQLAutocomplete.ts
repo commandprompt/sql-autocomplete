@@ -15,22 +15,19 @@ import { AutocompleteOption } from "./models/AutocompleteOption";
 import { AutocompleteOptionType } from "./models/AutocompleteOptionType";
 import { SimpleSQLTokenizer } from "./models/SimpleSQLTokenizer";
 import { Schema } from "./models/Schema";
+import { ExtendedSQLDialect, toAntlrDialect } from "./models/SQLDialect";
 
 export class SQLAutocomplete {
   dialect: SQLDialect;
+  extendedDialect: ExtendedSQLDialect;
   antlr4tssql: antlr4tsSQL;
 
   schemaNames: string[] = [];
   schemas: Schema[] = [];
-  bigQueryMode: boolean = false;
 
-  constructor(
-    dialect: SQLDialect,
-    bigQueryMode: boolean = false,
-    schemas?: Schema[]
-  ) {
-    this.dialect = dialect;
-    this.bigQueryMode = bigQueryMode;
+  constructor(dialect: ExtendedSQLDialect, schemas?: Schema[]) {
+    this.dialect = toAntlrDialect(dialect);
+    this.extendedDialect = dialect;
     this.antlr4tssql = new antlr4tsSQL(this.dialect);
     if (schemas !== null && schemas !== undefined) {
       this.schemas.push(...schemas);
@@ -81,6 +78,7 @@ export class SQLAutocomplete {
       indexToAutocomplete
     );
     tokens.fill(); // Needed for CoreCompletionCore to process correctly, see: https://github.com/mike-lischke/antlr4-c3/issues/42
+
     const autocompleteOptions: AutocompleteOption[] = [];
     // Depending on the SQL grammar, we may not get both Tables and Column rules,
     // even if both are viable options for autocompletion
@@ -152,9 +150,9 @@ export class SQLAutocomplete {
         }
       }
       for (const rule of candidates.rules) {
-        if (preferredRulesSchema.includes(rule[0])) {
-          isSchemaCandidatePosition = true;
-        }
+        // if (preferredRulesSchema.includes(rule[0])) {
+        //   isSchemaCandidatePosition = true;
+        // }
         if (preferredRulesTable.includes(rule[0])) {
           isTableCandidatePosition = true;
         }
@@ -164,25 +162,37 @@ export class SQLAutocomplete {
       }
     }
 
-    if (isSchemaCandidatePosition) {
-      for (const schemaName of this.schemaNames) {
-        if (schemaName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-          autocompleteOptions.unshift(
-            new AutocompleteOption(schemaName, AutocompleteOptionType.SCHEMA)
-          );
-        }
-      }
-      if (
-        autocompleteOptions.length === 0 ||
-        autocompleteOptions[0].optionType !== AutocompleteOptionType.SCHEMA
-      ) {
-        // If none of the table options match, still identify this as a potential table location
-        autocompleteOptions.unshift(
-          new AutocompleteOption(null, AutocompleteOptionType.SCHEMA)
-        );
-      }
+    // if (isSchemaCandidatePosition) {
+    //   for (const schemaName of this.schemaNames) {
+    //     if (schemaName.toUpperCase().startsWith(tokenString.toUpperCase())) {
+    //       autocompleteOptions.unshift(
+    //         new AutocompleteOption(schemaName, AutocompleteOptionType.SCHEMA)
+    //       );
+    //     }
+    //   }
+    //   if (
+    //     autocompleteOptions.length === 0 ||
+    //     autocompleteOptions[0].optionType !== AutocompleteOptionType.SCHEMA
+    //   ) {
+    //     // If none of the table options match, still identify this as a potential table location
+    //     autocompleteOptions.unshift(
+    //       new AutocompleteOption(null, AutocompleteOptionType.SCHEMA)
+    //     );
+    //   }
+    // }
+
+    if (isTableCandidatePosition) {
+      this._applyTableCompletions(
+        tokenIndex,
+        tokenString,
+        allTokens,
+        sqlScript,
+        indexToAutocomplete,
+        autocompleteOptions
+      );
     }
 
+    // Original codes
     // if (isTableCandidatePosition) {
     //   for (const tableName of this.tableNames) {
     //     if (tableName.toUpperCase().startsWith(tokenString.toUpperCase())) {
@@ -222,6 +232,66 @@ export class SQLAutocomplete {
     return autocompleteOptions;
   }
 
+  _applyTableCompletions(
+    tokenIndex: number,
+    tokenString: string,
+    allTokens: CommonTokenStream,
+    sqlScript: string,
+    indexToAutocomplete: number,
+    autocompleteOptions: AutocompleteOption[]
+  ) {
+    let tokenPos = tokenIndex;
+    let beforeTokenString: string;
+    if (tokenString === ".") {
+      beforeTokenString = tokenString;
+    } else {
+      tokenPos--;
+      beforeTokenString = this._getTokenString(
+        allTokens.getTokens()[tokenPos],
+        sqlScript,
+        indexToAutocomplete
+      );
+    }
+    if (beforeTokenString !== ".") {
+      // Complete schema names
+      for (const schema of this.schemas) {
+        if (schema.name.toUpperCase().startsWith(tokenString.toUpperCase())) {
+          autocompleteOptions.unshift(
+            new AutocompleteOption(schema.name, AutocompleteOptionType.SCHEMA)
+          );
+        }
+      }
+      return;
+    }
+
+    // Complete table names
+    tokenPos--;
+    const schemaTokenString = this._getTokenString(
+      allTokens.getTokens()[tokenPos],
+      sqlScript,
+      indexToAutocomplete
+    );
+    const currentSchemas = this.schemas.filter(
+      (s) => s.name === schemaTokenString
+    );
+    if (currentSchemas.length === 0) {
+      // No such schema
+      return;
+    }
+    const currentSchema = currentSchemas[0];
+    for (const table of currentSchema.tables) {
+      // Complete all tables if current token is "."
+      if (
+        tokenString === "." ||
+        table.name.toUpperCase().startsWith(tokenString.toUpperCase())
+      ) {
+        autocompleteOptions.unshift(
+          new AutocompleteOption(table.name, AutocompleteOptionType.TABLE)
+        );
+      }
+    }
+  }
+
   // setTableNames(tableNames: string[]): void {
   //   if (tableNames !== null && tableNames !== undefined) {
   //     this.tableNames = [...tableNames];
@@ -259,10 +329,12 @@ export class SQLAutocomplete {
   }
 
   _getPreferredRulesForSchema(): number[] {
-    if (this.dialect === SQLDialect.PLpgSQL && this.bigQueryMode) {
+    if (this.extendedDialect === ExtendedSQLDialect.BigQuery) {
       return [
-        PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name,
-        PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
+        TSQLGrammar.TSqlParser.RULE_table_name,
+        TSQLGrammar.TSqlParser.RULE_table_name_with_hint,
+        TSQLGrammar.TSqlParser.RULE_full_table_name,
+        TSQLGrammar.TSqlParser.RULE_table_source,
       ];
     }
     return [];

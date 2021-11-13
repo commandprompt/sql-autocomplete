@@ -6,6 +6,7 @@ import {
   Schema,
   Table,
   Column,
+  ExtendedSQLDialect,
 } from "../index";
 
 let mysqlAutocomplete: SQLAutocomplete = null;
@@ -14,12 +15,15 @@ let plpgsqlAutocomplete: SQLAutocomplete = null;
 let tsqlAutocomplete: SQLAutocomplete = null;
 let bqAutocomplete: SQLAutocomplete = null;
 beforeAll(() => {
-  mysqlAutocomplete = new SQLAutocomplete(SQLDialect.MYSQL);
-  plsqlAutocomplete = new SQLAutocomplete(SQLDialect.PLSQL);
-  plpgsqlAutocomplete = new SQLAutocomplete(SQLDialect.PLpgSQL);
-  tsqlAutocomplete = new SQLAutocomplete(SQLDialect.TSQL);
-  bqAutocomplete = new SQLAutocomplete(SQLDialect.PLpgSQL, true, [
-    new Schema("sch1", [new Table("tbl1", [new Column("colA")])]),
+  mysqlAutocomplete = new SQLAutocomplete(ExtendedSQLDialect.MYSQL);
+  plsqlAutocomplete = new SQLAutocomplete(ExtendedSQLDialect.PLSQL);
+  plpgsqlAutocomplete = new SQLAutocomplete(ExtendedSQLDialect.PLpgSQL);
+  tsqlAutocomplete = new SQLAutocomplete(ExtendedSQLDialect.TSQL);
+  bqAutocomplete = new SQLAutocomplete(ExtendedSQLDialect.BigQuery, [
+    new Schema("sch1", [
+      new Table("tbl1", [new Column("colA")]),
+      new Table("tbl1-A", [new Column("cola")]),
+    ]),
     new Schema("sch2", [new Table("tbl2", [new Column("colB")])]),
     new Schema("ssch3", [new Table("tbl2", [new Column("colB")])]),
   ]);
@@ -295,8 +299,7 @@ function allKeywordsBeginWith(
 //   ).toBeFalsy();
 //   expect(allKeywordsBeginWith(plpgsqlOptions, "FR")).toBeTruthy();
 // });
-
-test("autocomplete when bigQueryMode", () => {
+test("autocomplete when bigquery schema completion", () => {
   const sql = "SELECT * FROM sch";
   const bqOptions = bqAutocomplete.autocomplete(sql);
   expect(
@@ -304,6 +307,30 @@ test("autocomplete when bigQueryMode", () => {
   ).toBeTruthy();
   expect(
     bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.SCHEMA)
+      .length
+  ).toEqual(2);
+});
+
+test("autocomplete when bigquery table completion", () => {
+  const sql = "SELECT * FROM sch1.t";
+  const bqOptions = bqAutocomplete.autocomplete(sql);
+  expect(
+    containsOptionType(bqOptions, AutocompleteOptionType.TABLE)
+  ).toBeTruthy();
+  expect(
+    bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.TABLE)
+      .length
+  ).toEqual(2);
+});
+
+test("autocomplete when table completion dot", () => {
+  const sql = "SELECT * FROM sch1.";
+  const bqOptions = bqAutocomplete.autocomplete(sql);
+  expect(
+    containsOptionType(bqOptions, AutocompleteOptionType.TABLE)
+  ).toBeTruthy();
+  expect(
+    bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.TABLE)
       .length
   ).toEqual(2);
 });
