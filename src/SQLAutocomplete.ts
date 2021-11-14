@@ -285,8 +285,10 @@ export class SQLAutocomplete {
     for (const table of currentSchema.tables) {
       // Complete all tables if current token is "."
       if (table.name.toUpperCase().startsWith(tokenString.toUpperCase())) {
+        // CodeMirror Editor cannot recognize dot token
+        // TODO: FIX
         options.push(
-          new AutocompleteOption(table.name, AutocompleteOptionType.TABLE)
+          new AutocompleteOption("." + table.name, AutocompleteOptionType.TABLE)
         );
       }
     }
