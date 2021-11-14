@@ -1,11 +1,11 @@
 {
   "name": "sql-autocomplete",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Autocomplete recommendations for SQL statements. Supports PostgreSQL, MySQL, SQL Server and Oracle (PL/SQL) dialects.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepare": "npm run build",
+    "postinstall": "npm run build",
     "build": "tsc --build --clean && tsc",
     "test": "npx jest"
   },
