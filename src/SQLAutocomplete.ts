@@ -317,7 +317,10 @@ export class SQLAutocomplete {
   }
 
   _tokenizeWhitespace() {
-    if (this.dialect === SQLDialect.TSQL) {
+    if (
+      this.dialect === SQLDialect.TSQL ||
+      this.dialect === SQLDialect.BigQuery
+    ) {
       return false; // TSQL grammar SKIPs whitespace
     } else if (this.dialect === SQLDialect.PLSQL) {
       return true;

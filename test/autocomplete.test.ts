@@ -6,7 +6,6 @@ import {
   Schema,
   Table,
   Column,
-  ExtendedSQLDialect,
 } from "../index";
 
 let mysqlAutocomplete: SQLAutocomplete = null;
@@ -15,11 +14,11 @@ let plpgsqlAutocomplete: SQLAutocomplete = null;
 let tsqlAutocomplete: SQLAutocomplete = null;
 let bqAutocomplete: SQLAutocomplete = null;
 beforeAll(() => {
-  mysqlAutocomplete = new SQLAutocomplete(ExtendedSQLDialect.MYSQL);
-  plsqlAutocomplete = new SQLAutocomplete(ExtendedSQLDialect.PLSQL);
-  plpgsqlAutocomplete = new SQLAutocomplete(ExtendedSQLDialect.PLpgSQL);
-  tsqlAutocomplete = new SQLAutocomplete(ExtendedSQLDialect.TSQL);
-  bqAutocomplete = new SQLAutocomplete(ExtendedSQLDialect.BigQuery, [
+  mysqlAutocomplete = new SQLAutocomplete(SQLDialect.MYSQL);
+  plsqlAutocomplete = new SQLAutocomplete(SQLDialect.PLSQL);
+  plpgsqlAutocomplete = new SQLAutocomplete(SQLDialect.PLpgSQL);
+  tsqlAutocomplete = new SQLAutocomplete(SQLDialect.TSQL);
+  bqAutocomplete = new SQLAutocomplete(SQLDialect.BigQuery, [
     new Schema("sch1", [
       new Table("tbl1", [new Column("colA")]),
       new Table("tbl1-A", [new Column("cola")]),

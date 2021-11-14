@@ -33,7 +33,7 @@
   "homepage": "https://modeldba.com/sql-autocomplete",
   "dependencies": {
     "antlr4-c3": "^1.1.15",
-    "antlr4ts-sql": "Attsun1031/antlr4ts-sql#v1.2.1"
+    "antlr4ts-sql": "Attsun1031/antlr4ts-sql#v1.2.2"
   },
   "devDependencies": {
     "@types/jest": "^26.0.20",
