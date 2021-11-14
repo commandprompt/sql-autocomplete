@@ -1,5 +1,6 @@
 import {
   antlr4tsSQL,
+  BigQueryGrammar,
   CommonTokenStream,
   PredictionMode,
   MySQLGrammar,
@@ -15,19 +16,16 @@ import { AutocompleteOption } from "./models/AutocompleteOption";
 import { AutocompleteOptionType } from "./models/AutocompleteOptionType";
 import { SimpleSQLTokenizer } from "./models/SimpleSQLTokenizer";
 import { Schema } from "./models/Schema";
-import { ExtendedSQLDialect, toAntlrDialect } from "./models/SQLDialect";
 
 export class SQLAutocomplete {
   dialect: SQLDialect;
-  extendedDialect: ExtendedSQLDialect;
   antlr4tssql: antlr4tsSQL;
 
   schemaNames: string[] = [];
   schemas: Schema[] = [];
 
-  constructor(dialect: ExtendedSQLDialect, schemas?: Schema[]) {
-    this.dialect = toAntlrDialect(dialect);
-    this.extendedDialect = dialect;
+  constructor(dialect: SQLDialect, schemas?: Schema[]) {
+    this.dialect = dialect;
     this.antlr4tssql = new antlr4tsSQL(this.dialect);
     if (schemas !== null && schemas !== undefined) {
       this.schemas.push(...schemas);
@@ -332,12 +330,12 @@ export class SQLAutocomplete {
   }
 
   _getPreferredRulesForSchema(): number[] {
-    if (this.extendedDialect === ExtendedSQLDialect.BigQuery) {
+    if (this.dialect === SQLDialect.BigQuery) {
       return [
-        TSQLGrammar.TSqlParser.RULE_table_name,
-        TSQLGrammar.TSqlParser.RULE_table_name_with_hint,
-        TSQLGrammar.TSqlParser.RULE_full_table_name,
-        TSQLGrammar.TSqlParser.RULE_table_source,
+        BigQueryGrammar.BigQueryParser.RULE_table_name,
+        BigQueryGrammar.BigQueryParser.RULE_table_name_with_hint,
+        BigQueryGrammar.BigQueryParser.RULE_full_table_name,
+        BigQueryGrammar.BigQueryParser.RULE_table_source,
       ];
     }
     return [];
@@ -366,6 +364,13 @@ export class SQLAutocomplete {
         PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name,
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
       ];
+    } else if (this.dialect === SQLDialect.BigQuery) {
+      return [
+        BigQueryGrammar.BigQueryParser.RULE_table_name,
+        BigQueryGrammar.BigQueryParser.RULE_table_name_with_hint,
+        BigQueryGrammar.BigQueryParser.RULE_full_table_name,
+        BigQueryGrammar.BigQueryParser.RULE_table_source,
+      ];
     }
     return [];
   }
@@ -390,6 +395,14 @@ export class SQLAutocomplete {
       return [
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_identifier,
+      ];
+    } else if (this.dialect === SQLDialect.BigQuery) {
+      return [
+        BigQueryGrammar.BigQueryParser.RULE_column_elem,
+        BigQueryGrammar.BigQueryParser.RULE_column_alias,
+        BigQueryGrammar.BigQueryParser.RULE_full_column_name,
+        BigQueryGrammar.BigQueryParser.RULE_output_column_name,
+        BigQueryGrammar.BigQueryParser.RULE_column_declaration,
       ];
     }
     return [];
@@ -436,6 +449,14 @@ export class SQLAutocomplete {
         PLpgSQLGrammar.PLpgSQLParser.RIGHT_PAREN,
         PLpgSQLGrammar.PLpgSQLParser.LEFT_BRACKET,
         PLpgSQLGrammar.PLpgSQLParser.RIGHT_BRACKET,
+      ];
+    } else if (this.dialect === SQLDialect.BigQuery) {
+      return [
+        BigQueryGrammar.BigQueryParser.DOT,
+        BigQueryGrammar.BigQueryParser.COMMA,
+        BigQueryGrammar.BigQueryParser.ID,
+        BigQueryGrammar.BigQueryParser.LR_BRACKET,
+        BigQueryGrammar.BigQueryParser.RR_BRACKET,
       ];
     }
     return [];
