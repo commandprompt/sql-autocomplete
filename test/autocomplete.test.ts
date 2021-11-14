@@ -322,15 +322,3 @@ test("autocomplete when bigquery table completion", () => {
       .length
   ).toEqual(2);
 });
-
-test("autocomplete when table completion dot", () => {
-  const sql = "SELECT * FROM sch1.";
-  const bqOptions = bqAutocomplete.autocomplete(sql);
-  expect(
-    containsOptionType(bqOptions, AutocompleteOptionType.TABLE)
-  ).toBeTruthy();
-  expect(
-    bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.TABLE)
-      .length
-  ).toEqual(2);
-});

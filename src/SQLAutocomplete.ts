@@ -182,14 +182,20 @@ export class SQLAutocomplete {
     // }
 
     if (isTableCandidatePosition) {
-      this._applyTableCompletions(
+      const [tableCompletions, isTable] = this._getTableCompletions(
         tokenIndex,
         tokenString,
         allTokens,
         sqlScript,
-        indexToAutocomplete,
-        autocompleteOptions
+        indexToAutocomplete
       );
+      if (isTable) {
+        // Use only table names when we can suggest tables.
+        // The reason above is that at "schema_name.part_of_table_name" situation, there are no suggestion candidates except table names.
+        return tableCompletions;
+      } else if (tableCompletions.length > 0) {
+        autocompleteOptions.splice(0, 0, ...tableCompletions);
+      }
     }
 
     // Original codes
@@ -232,36 +238,32 @@ export class SQLAutocomplete {
     return autocompleteOptions;
   }
 
-  _applyTableCompletions(
+  _getTableCompletions(
     tokenIndex: number,
     tokenString: string,
     allTokens: CommonTokenStream,
     sqlScript: string,
-    indexToAutocomplete: number,
-    autocompleteOptions: AutocompleteOption[]
-  ) {
+    indexToAutocomplete: number
+  ): [AutocompleteOption[], boolean] {
+    // Return true as second return value if completion types are tables.
     let tokenPos = tokenIndex;
-    let beforeTokenString: string;
-    if (tokenString === ".") {
-      beforeTokenString = tokenString;
-    } else {
-      tokenPos--;
-      beforeTokenString = this._getTokenString(
-        allTokens.getTokens()[tokenPos],
-        sqlScript,
-        indexToAutocomplete
-      );
-    }
+    tokenPos--;
+    let beforeTokenString = this._getTokenString(
+      allTokens.getTokens()[tokenPos],
+      sqlScript,
+      indexToAutocomplete
+    );
     if (beforeTokenString !== ".") {
       // Complete schema names
+      const options = [];
       for (const schema of this.schemas) {
         if (schema.name.toUpperCase().startsWith(tokenString.toUpperCase())) {
-          autocompleteOptions.unshift(
+          options.push(
             new AutocompleteOption(schema.name, AutocompleteOptionType.SCHEMA)
           );
         }
       }
-      return;
+      return [options, false];
     }
 
     // Complete table names
@@ -276,20 +278,19 @@ export class SQLAutocomplete {
     );
     if (currentSchemas.length === 0) {
       // No such schema
-      return;
+      return [[], false];
     }
+    const options = [];
     const currentSchema = currentSchemas[0];
     for (const table of currentSchema.tables) {
       // Complete all tables if current token is "."
-      if (
-        tokenString === "." ||
-        table.name.toUpperCase().startsWith(tokenString.toUpperCase())
-      ) {
-        autocompleteOptions.unshift(
+      if (table.name.toUpperCase().startsWith(tokenString.toUpperCase())) {
+        options.push(
           new AutocompleteOption(table.name, AutocompleteOptionType.TABLE)
         );
       }
     }
+    return [options, true];
   }
 
   // setTableNames(tableNames: string[]): void {
