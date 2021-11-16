@@ -321,3 +321,18 @@ test("autocomplete when bigquery table completion", () => {
       .length
   ).toEqual(2);
 });
+
+test("autocomplete when bigquery multiline completion", () => {
+  const sql = `SELECT 
+  * 
+FROM
+  sch1.tb`;
+  const bqOptions = bqAutocomplete.autocomplete(sql);
+  expect(
+    containsOptionType(bqOptions, AutocompleteOptionType.TABLE)
+  ).toBeTruthy();
+  expect(
+    bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.TABLE)
+      .length
+  ).toEqual(2);
+});
