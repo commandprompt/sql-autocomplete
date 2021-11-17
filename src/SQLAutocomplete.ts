@@ -58,7 +58,8 @@ export class SQLAutocomplete {
     }
     const simpleSQLTokenizer = new SimpleSQLTokenizer(
       sqlScript,
-      this._tokenizeWhitespace()
+      this._tokenizeWhitespace(),
+      this._getTokenizeGraveNote()
     );
     const allTokens = new CommonTokenStream(simpleSQLTokenizer);
     const tokenIndex = this._getTokenIndexAt(
@@ -86,6 +87,9 @@ export class SQLAutocomplete {
     let isColumnCandidatePosition = false;
     for (const preferredRules of preferredRuleOptions) {
       core.preferredRules = new Set(preferredRules);
+      // core.showResult = true;
+      // core.showDebugOutput = true;
+      // core.showRuleStack = true;
       const candidates = core.collectCandidates(tokenIndex);
       for (const candidateToken of candidates.tokens) {
         let candidateTokenValue = parser.vocabulary.getDisplayName(
@@ -148,9 +152,9 @@ export class SQLAutocomplete {
         }
       }
       for (const rule of candidates.rules) {
-        // if (preferredRulesSchema.includes(rule[0])) {
-        //   isSchemaCandidatePosition = true;
-        // }
+        if (preferredRulesSchema.includes(rule[0])) {
+          isSchemaCandidatePosition = true;
+        }
         if (preferredRulesTable.includes(rule[0])) {
           isTableCandidatePosition = true;
         }
@@ -160,24 +164,26 @@ export class SQLAutocomplete {
       }
     }
 
-    // if (isSchemaCandidatePosition) {
-    //   for (const schemaName of this.schemaNames) {
-    //     if (schemaName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-    //       autocompleteOptions.unshift(
-    //         new AutocompleteOption(schemaName, AutocompleteOptionType.SCHEMA)
-    //       );
-    //     }
-    //   }
-    //   if (
-    //     autocompleteOptions.length === 0 ||
-    //     autocompleteOptions[0].optionType !== AutocompleteOptionType.SCHEMA
-    //   ) {
-    //     // If none of the table options match, still identify this as a potential table location
-    //     autocompleteOptions.unshift(
-    //       new AutocompleteOption(null, AutocompleteOptionType.SCHEMA)
-    //     );
-    //   }
-    // }
+    // TODO: schema completion 直す
+    // project completion作る
+    if (isSchemaCandidatePosition) {
+      for (const schemaName of this.schemaNames) {
+        if (schemaName.toUpperCase().startsWith(tokenString.toUpperCase())) {
+          autocompleteOptions.unshift(
+            new AutocompleteOption(schemaName, AutocompleteOptionType.SCHEMA)
+          );
+        }
+      }
+      if (
+        autocompleteOptions.length === 0 ||
+        autocompleteOptions[0].optionType !== AutocompleteOptionType.SCHEMA
+      ) {
+        // If none of the table options match, still identify this as a potential table location
+        autocompleteOptions.unshift(
+          new AutocompleteOption(null, AutocompleteOptionType.SCHEMA)
+        );
+      }
+    }
 
     if (isTableCandidatePosition) {
       const [tableCompletions, isTable] = this._getTableCompletions(
@@ -246,18 +252,34 @@ export class SQLAutocomplete {
     // Return true as second return value if completion types are tables.
     let tokenPos = tokenIndex;
     tokenPos--;
+
+    // Get token before
     let beforeTokenString = this._getTokenString(
       allTokens.getTokens()[tokenPos],
       sqlScript,
       indexToAutocomplete
     );
+
     if (beforeTokenString !== ".") {
       // Complete schema names
       const options = [];
+      // Trim bk quote if startswith bk quote
+      let bkQuote = "";
+      let tokenStringTrimmed = tokenString;
+      if (tokenString.startsWith("`")) {
+        bkQuote = "`";
+        tokenStringTrimmed = tokenStringTrimmed.substring(1);
+      }
+
       for (const schema of this.schemas) {
-        if (schema.name.toUpperCase().startsWith(tokenString.toUpperCase())) {
+        if (
+          schema.name.toUpperCase().startsWith(tokenStringTrimmed.toUpperCase())
+        ) {
           options.push(
-            new AutocompleteOption(schema.name, AutocompleteOptionType.SCHEMA)
+            new AutocompleteOption(
+              bkQuote + schema.name,
+              AutocompleteOptionType.SCHEMA
+            )
           );
         }
       }
@@ -334,12 +356,7 @@ export class SQLAutocomplete {
 
   _getPreferredRulesForSchema(): number[] {
     if (this.dialect === SQLDialect.BigQuery) {
-      return [
-        BigQueryGrammar.BigQueryParser.RULE_table_name,
-        BigQueryGrammar.BigQueryParser.RULE_table_name_with_hint,
-        BigQueryGrammar.BigQueryParser.RULE_full_table_name,
-        BigQueryGrammar.BigQueryParser.RULE_table_source,
-      ];
+      return [BigQueryGrammar.BigQueryParser.RULE_dataset_name];
     }
     return [];
   }
@@ -368,12 +385,7 @@ export class SQLAutocomplete {
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
       ];
     } else if (this.dialect === SQLDialect.BigQuery) {
-      return [
-        BigQueryGrammar.BigQueryParser.RULE_table_name,
-        BigQueryGrammar.BigQueryParser.RULE_table_name_with_hint,
-        BigQueryGrammar.BigQueryParser.RULE_full_table_name,
-        BigQueryGrammar.BigQueryParser.RULE_table_source,
-      ];
+      return [BigQueryGrammar.BigQueryParser.RULE_table_name];
     }
     return [];
   }
@@ -400,13 +412,7 @@ export class SQLAutocomplete {
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_identifier,
       ];
     } else if (this.dialect === SQLDialect.BigQuery) {
-      return [
-        BigQueryGrammar.BigQueryParser.RULE_column_elem,
-        BigQueryGrammar.BigQueryParser.RULE_column_alias,
-        BigQueryGrammar.BigQueryParser.RULE_full_column_name,
-        BigQueryGrammar.BigQueryParser.RULE_output_column_name,
-        BigQueryGrammar.BigQueryParser.RULE_column_declaration,
-      ];
+      return [BigQueryGrammar.BigQueryParser.RULE_column_name];
     }
     return [];
   }
@@ -502,5 +508,13 @@ export class SQLAutocomplete {
       return fullString.substring(token.start, stop + 1);
     }
     return "";
+  }
+
+  _getTokenizeGraveNote(): boolean {
+    if (this.dialect === SQLDialect.BigQuery) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }

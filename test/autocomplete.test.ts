@@ -298,9 +298,11 @@ function allKeywordsBeginWith(
 //   ).toBeFalsy();
 //   expect(allKeywordsBeginWith(plpgsqlOptions, "FR")).toBeTruthy();
 // });
+
 test("autocomplete when bigquery schema completion", () => {
-  const sql = "SELECT * FROM sch";
+  const sql = "SELECT * FROM `sch";
   const bqOptions = bqAutocomplete.autocomplete(sql);
+  console.log(bqOptions);
   expect(
     containsOptionType(bqOptions, AutocompleteOptionType.SCHEMA)
   ).toBeTruthy();
@@ -323,10 +325,10 @@ test("autocomplete when bigquery table completion", () => {
 });
 
 test("autocomplete when bigquery multiline completion", () => {
-  const sql = `SELECT 
-  * 
-FROM
-  sch1.tb`;
+  const sql = `SELECT
+   *
+  FROM
+   \`sch1.tb`;
   const bqOptions = bqAutocomplete.autocomplete(sql);
   expect(
     containsOptionType(bqOptions, AutocompleteOptionType.TABLE)
