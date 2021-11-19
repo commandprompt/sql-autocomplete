@@ -676,9 +676,9 @@ antlr4-c3@^1.1.15:
   dependencies:
     antlr4ts "^0.5.0-alpha.3"
 
-antlr4ts-sql@Attsun1031/antlr4ts-sql#v1.2.2:
+"antlr4ts-sql@https://github.com/Attsun1031/antlr4ts-sql.git#v2.0.0":
   version "1.2.2"
-  resolved "https://codeload.github.com/Attsun1031/antlr4ts-sql/tar.gz/bc0cbfe58b3f5a457a0ce9eaa201b577cecc3a42"
+  resolved "https://github.com/Attsun1031/antlr4ts-sql.git#2199e59c1ed7854ebfd914beca4a3fdfa4303c18"
   dependencies:
     antlr4ts "^0.5.0-alpha.4"
 

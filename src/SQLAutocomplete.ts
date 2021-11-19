@@ -15,21 +15,29 @@ import { CodeCompletionCore } from "antlr4-c3";
 import { AutocompleteOption } from "./models/AutocompleteOption";
 import { AutocompleteOptionType } from "./models/AutocompleteOptionType";
 import { SimpleSQLTokenizer } from "./models/SimpleSQLTokenizer";
-import { Schema } from "./models/Schema";
+import { BigQueryProjects } from "./models/Resources";
 
 export class SQLAutocomplete {
   dialect: SQLDialect;
   antlr4tssql: antlr4tsSQL;
+  bigQueryProject?: BigQueryProjects;
+  tableNames: string[] = [];
+  columnNames: string[] = [];
 
-  schemaNames: string[] = [];
-  schemas: Schema[] = [];
-
-  constructor(dialect: SQLDialect, schemas?: Schema[]) {
+  constructor(dialect: SQLDialect, bigQueryProjects?: BigQueryProjects, tableNames?: string[], columnNames?: string[]) {
     this.dialect = dialect;
     this.antlr4tssql = new antlr4tsSQL(this.dialect);
-    if (schemas !== null && schemas !== undefined) {
-      this.schemas.push(...schemas);
-      this.schemaNames.push(...schemas.map((v) => v.name));
+    if (tableNames !== null && tableNames !== undefined) {
+      this.tableNames.push(...tableNames);
+    }
+    if (columnNames !== null && columnNames !== undefined) {
+      this.columnNames.push(...columnNames);
+    }
+    if (this.dialect === SQLDialect.BigQuery) {
+      if (bigQueryProjects === undefined || bigQueryProjects === null) {
+        throw new Error("You must set bigQueryProjects when you use BigQueryDialect.");
+      }
+      this.bigQueryProject = bigQueryProjects;
     }
   }
 
@@ -39,13 +47,16 @@ export class SQLAutocomplete {
       // it's not needed and keeping it in may impact which token gets selected for prediction
       sqlScript = sqlScript.substring(0, atIndex);
     }
+    const withGrave = true;
     const tokens = this._getTokens(sqlScript);
     const parser = this._getParser(tokens);
     const core = new CodeCompletionCore(parser);
+    const preferredRulesProject = this._getPreferredRulesForProject();
     const preferredRulesSchema = this._getPreferredRulesForSchema();
     const preferredRulesTable = this._getPreferredRulesForTable();
     const preferredRulesColumn = this._getPreferredRulesForColumn();
     const preferredRuleOptions = [
+      preferredRulesProject,
       preferredRulesSchema,
       preferredRulesTable,
       preferredRulesColumn,
@@ -58,76 +69,47 @@ export class SQLAutocomplete {
     }
     const simpleSQLTokenizer = new SimpleSQLTokenizer(
       sqlScript,
-      this._tokenizeWhitespace()
+      this._tokenizeWhitespace(),
+      this._getTokenizeGraveNote()
     );
     const allTokens = new CommonTokenStream(simpleSQLTokenizer);
-    const tokenIndex = this._getTokenIndexAt(
-      allTokens.getTokens(),
-      sqlScript,
-      indexToAutocomplete
-    );
+    const tokenIndex = this._getTokenIndexAt(allTokens.getTokens(), sqlScript, indexToAutocomplete);
     if (tokenIndex === null) {
       return null;
     }
     const token: any = allTokens.getTokens()[tokenIndex];
-    const tokenString = this._getTokenString(
-      token,
-      sqlScript,
-      indexToAutocomplete
-    );
+    const tokenString = this._getTokenString(token, sqlScript, indexToAutocomplete);
     tokens.fill(); // Needed for CoreCompletionCore to process correctly, see: https://github.com/mike-lischke/antlr4-c3/issues/42
 
     const autocompleteOptions: AutocompleteOption[] = [];
     // Depending on the SQL grammar, we may not get both Tables and Column rules,
     // even if both are viable options for autocompletion
     // So, instead of using all preferredRules at once, we'll do them separate
+    let isProjectCandidatePosition = false;
     let isSchemaCandidatePosition = false;
     let isTableCandidatePosition = false;
     let isColumnCandidatePosition = false;
     for (const preferredRules of preferredRuleOptions) {
       core.preferredRules = new Set(preferredRules);
+      // core.showResult = true;
+      // core.showDebugOutput = true;
+      // core.showRuleStack = true;
       const candidates = core.collectCandidates(tokenIndex);
       for (const candidateToken of candidates.tokens) {
-        let candidateTokenValue = parser.vocabulary.getDisplayName(
-          candidateToken[0]
-        );
-        if (
-          this.dialect === SQLDialect.MYSQL &&
-          candidateTokenValue.endsWith("_SYMBOL")
-        ) {
-          candidateTokenValue = candidateTokenValue.substring(
-            0,
-            candidateTokenValue.length - 7
-          );
+        let candidateTokenValue = parser.vocabulary.getDisplayName(candidateToken[0]);
+        if (this.dialect === SQLDialect.MYSQL && candidateTokenValue.endsWith("_SYMBOL")) {
+          candidateTokenValue = candidateTokenValue.substring(0, candidateTokenValue.length - 7);
         }
-        if (
-          candidateTokenValue.startsWith("'") &&
-          candidateTokenValue.endsWith("'")
-        ) {
-          candidateTokenValue = candidateTokenValue.substring(
-            1,
-            candidateTokenValue.length - 1
-          );
+        if (candidateTokenValue.startsWith("'") && candidateTokenValue.endsWith("'")) {
+          candidateTokenValue = candidateTokenValue.substring(1, candidateTokenValue.length - 1);
         }
         let followOnTokens = candidateToken[1];
         for (const followOnToken of followOnTokens) {
-          let followOnTokenValue =
-            parser.vocabulary.getDisplayName(followOnToken);
-          if (
-            followOnTokenValue.startsWith("'") &&
-            followOnTokenValue.endsWith("'")
-          ) {
-            followOnTokenValue = followOnTokenValue.substring(
-              1,
-              followOnTokenValue.length - 1
-            );
+          let followOnTokenValue = parser.vocabulary.getDisplayName(followOnToken);
+          if (followOnTokenValue.startsWith("'") && followOnTokenValue.endsWith("'")) {
+            followOnTokenValue = followOnTokenValue.substring(1, followOnTokenValue.length - 1);
           }
-          if (
-            !(
-              followOnTokenValue.length === 1 &&
-              /[^\w\s]/.test(followOnTokenValue)
-            )
-          ) {
+          if (!(followOnTokenValue.length === 1 && /[^\w\s]/.test(followOnTokenValue))) {
             candidateTokenValue += " ";
           }
           candidateTokenValue += followOnTokenValue;
@@ -135,22 +117,18 @@ export class SQLAutocomplete {
         if (
           tokenString.length === 0 ||
           (candidateTokenValue.startsWith(tokenString.toUpperCase()) &&
-            autocompleteOptions.find(
-              (option) => option.value === candidateTokenValue
-            ) === undefined)
+            autocompleteOptions.find((option) => option.value === candidateTokenValue) === undefined)
         ) {
-          autocompleteOptions.push(
-            new AutocompleteOption(
-              candidateTokenValue,
-              AutocompleteOptionType.KEYWORD
-            )
-          );
+          autocompleteOptions.push(new AutocompleteOption(candidateTokenValue, AutocompleteOptionType.KEYWORD));
         }
       }
       for (const rule of candidates.rules) {
-        // if (preferredRulesSchema.includes(rule[0])) {
-        //   isSchemaCandidatePosition = true;
-        // }
+        if (preferredRulesProject.includes(rule[0])) {
+          isProjectCandidatePosition = true;
+        }
+        if (preferredRulesSchema.includes(rule[0])) {
+          isSchemaCandidatePosition = true;
+        }
         if (preferredRulesTable.includes(rule[0])) {
           isTableCandidatePosition = true;
         }
@@ -160,150 +138,123 @@ export class SQLAutocomplete {
       }
     }
 
-    // if (isSchemaCandidatePosition) {
-    //   for (const schemaName of this.schemaNames) {
-    //     if (schemaName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-    //       autocompleteOptions.unshift(
-    //         new AutocompleteOption(schemaName, AutocompleteOptionType.SCHEMA)
-    //       );
-    //     }
-    //   }
-    //   if (
-    //     autocompleteOptions.length === 0 ||
-    //     autocompleteOptions[0].optionType !== AutocompleteOptionType.SCHEMA
-    //   ) {
-    //     // If none of the table options match, still identify this as a potential table location
-    //     autocompleteOptions.unshift(
-    //       new AutocompleteOption(null, AutocompleteOptionType.SCHEMA)
-    //     );
-    //   }
-    // }
+    if (this.dialect === SQLDialect.BigQuery) {
+      // Complete project
+      if (isProjectCandidatePosition) {
+        const projects = this.bigQueryProject.listMatchedProjects(tokenString);
+        // Add "." at the end for usability.
+        const projectOptions = projects.map(
+          (pj) => new AutocompleteOption(`${pj.getName(withGrave)}.`, AutocompleteOptionType.PROJECT)
+        );
+        autocompleteOptions.unshift(...projectOptions);
+      }
 
-    if (isTableCandidatePosition) {
-      const [tableCompletions, isTable] = this._getTableCompletions(
-        tokenIndex,
-        tokenString,
-        allTokens,
-        sqlScript,
-        indexToAutocomplete
-      );
-      if (isTable) {
-        // Use only table names when we can suggest tables.
-        // The reason above is that at "schema_name.part_of_table_name" situation, there are no suggestion candidates except table names.
-        return tableCompletions;
-      } else if (tableCompletions.length > 0) {
-        autocompleteOptions.splice(0, 0, ...tableCompletions);
+      // Collect input project and schema.
+      // values[0] will be schema or project, and values[1] will be schema.
+      const values = [];
+      let i = 1;
+      let expectDot = true;
+      while (true) {
+        let ts: any = this._getTokenString(allTokens.getTokens()[tokenIndex - i], sqlScript, indexToAutocomplete);
+        if (values.length >= 2) {
+          break;
+        }
+        if (ts === "`") {
+          i += 1;
+          continue;
+        }
+
+        if (expectDot && ts === ".") {
+          expectDot = false;
+          i += 1;
+        } else if (!expectDot && ts !== "") {
+          values.unshift(ts);
+          expectDot = true;
+          i += 1;
+        } else {
+          break;
+        }
+      }
+
+      // Complete schema
+      if (isSchemaCandidatePosition) {
+        let currentProject: string = null;
+        if (values.length === 1) {
+          currentProject = values[0];
+        }
+        const schemas = this.bigQueryProject.listMatchedSchemas(tokenString, currentProject);
+        const schemaOptions = schemas.map(
+          (s) =>
+            new AutocompleteOption(
+              // Add "." at the end for usability.
+              // Complete with project if no project set.
+              `${currentProject !== null ? s.getName(withGrave) : s.getFullName(withGrave)}.`,
+              AutocompleteOptionType.SCHEMA
+            )
+        );
+        autocompleteOptions.unshift(...schemaOptions);
+      }
+
+      // Complete table
+      if (isTableCandidatePosition) {
+        let currentSchema: string = null;
+        let currentProject: string = null;
+        if (values.length === 1) {
+          currentSchema = values[0];
+        } else if (values.length === 2) {
+          currentProject = values[0];
+          currentSchema = values[1];
+        }
+        const tables = this.bigQueryProject.listMatchedTables(tokenString, currentSchema, currentProject);
+        const tableOptions = tables.map(
+          (t) =>
+            new AutocompleteOption(
+              // Complete with project and schema if no project set.
+              currentSchema !== null ? t.getName(withGrave) : t.getFullName(withGrave),
+              AutocompleteOptionType.TABLE
+            )
+        );
+        autocompleteOptions.unshift(...tableOptions);
+      }
+    } else {
+      if (isTableCandidatePosition) {
+        for (const tableName of this.tableNames) {
+          if (tableName.toUpperCase().startsWith(tokenString.toUpperCase())) {
+            autocompleteOptions.unshift(new AutocompleteOption(tableName, AutocompleteOptionType.TABLE));
+          }
+        }
+        if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType.TABLE) {
+          // If none of the table options match, still identify this as a potential table location
+          autocompleteOptions.unshift(new AutocompleteOption(null, AutocompleteOptionType.TABLE));
+        }
+      }
+      if (isColumnCandidatePosition) {
+        for (const columnName of this.columnNames) {
+          if (columnName.toUpperCase().startsWith(tokenString.toUpperCase())) {
+            autocompleteOptions.unshift(new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN));
+          }
+        }
+        if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType.COLUMN) {
+          // If none of the column options match, still identify this as a potential column location
+          autocompleteOptions.unshift(new AutocompleteOption(null, AutocompleteOptionType.COLUMN));
+        }
       }
     }
 
-    // Original codes
-    // if (isTableCandidatePosition) {
-    //   for (const tableName of this.tableNames) {
-    //     if (tableName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-    //       autocompleteOptions.unshift(
-    //         new AutocompleteOption(tableName, AutocompleteOptionType.TABLE)
-    //       );
-    //     }
-    //   }
-    //   if (
-    //     autocompleteOptions.length === 0 ||
-    //     autocompleteOptions[0].optionType !== AutocompleteOptionType.TABLE
-    //   ) {
-    //     // If none of the table options match, still identify this as a potential table location
-    //     autocompleteOptions.unshift(
-    //       new AutocompleteOption(null, AutocompleteOptionType.TABLE)
-    //     );
-    //   }
-    // }
-    // if (isColumnCandidatePosition) {
-    //   for (const columnName of this.columnNames) {
-    //     if (columnName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-    //       autocompleteOptions.unshift(
-    //         new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN)
-    //       );
-    //     }
-    //   }
-    //   if (
-    //     autocompleteOptions.length === 0 ||
-    //     autocompleteOptions[0].optionType !== AutocompleteOptionType.COLUMN
-    //   ) {
-    //     // If none of the column options match, still identify this as a potential column location
-    //     autocompleteOptions.unshift(
-    //       new AutocompleteOption(null, AutocompleteOptionType.COLUMN)
-    //     );
-    //   }
-    // }
     return autocompleteOptions;
   }
 
-  _getTableCompletions(
-    tokenIndex: number,
-    tokenString: string,
-    allTokens: CommonTokenStream,
-    sqlScript: string,
-    indexToAutocomplete: number
-  ): [AutocompleteOption[], boolean] {
-    // Return true as second return value if completion types are tables.
-    let tokenPos = tokenIndex;
-    tokenPos--;
-    let beforeTokenString = this._getTokenString(
-      allTokens.getTokens()[tokenPos],
-      sqlScript,
-      indexToAutocomplete
-    );
-    if (beforeTokenString !== ".") {
-      // Complete schema names
-      const options = [];
-      for (const schema of this.schemas) {
-        if (schema.name.toUpperCase().startsWith(tokenString.toUpperCase())) {
-          options.push(
-            new AutocompleteOption(schema.name, AutocompleteOptionType.SCHEMA)
-          );
-        }
-      }
-      return [options, false];
+  setTableNames(tableNames: string[]): void {
+    if (tableNames !== null && tableNames !== undefined) {
+      this.tableNames = [...tableNames];
     }
-
-    // Complete table names
-    tokenPos--;
-    const schemaTokenString = this._getTokenString(
-      allTokens.getTokens()[tokenPos],
-      sqlScript,
-      indexToAutocomplete
-    );
-    const currentSchemas = this.schemas.filter(
-      (s) => s.name === schemaTokenString
-    );
-    if (currentSchemas.length === 0) {
-      // No such schema
-      return [[], false];
-    }
-    const options = [];
-    const currentSchema = currentSchemas[0];
-    for (const table of currentSchema.tables) {
-      // Complete all tables if current token is "."
-      if (table.name.toUpperCase().startsWith(tokenString.toUpperCase())) {
-        // CodeMirror Editor cannot recognize dot token
-        // TODO: FIX
-        options.push(
-          new AutocompleteOption("." + table.name, AutocompleteOptionType.TABLE)
-        );
-      }
-    }
-    return [options, true];
   }
 
-  // setTableNames(tableNames: string[]): void {
-  //   if (tableNames !== null && tableNames !== undefined) {
-  //     this.tableNames = [...tableNames];
-  //   }
-  // }
-
-  // setColumnNames(columnNames: string[]): void {
-  //   if (columnNames !== null && columnNames !== undefined) {
-  //     this.columnNames = [...columnNames];
-  //   }
-  // }
+  setColumnNames(columnNames: string[]): void {
+    if (columnNames !== null && columnNames !== undefined) {
+      this.columnNames = [...columnNames];
+    }
+  }
 
   _getTokens(sqlScript: string): CommonTokenStream {
     const tokens = this.antlr4tssql.getTokens(sqlScript, []);
@@ -317,10 +268,7 @@ export class SQLAutocomplete {
   }
 
   _tokenizeWhitespace() {
-    if (
-      this.dialect === SQLDialect.TSQL ||
-      this.dialect === SQLDialect.BigQuery
-    ) {
+    if (this.dialect === SQLDialect.TSQL || this.dialect === SQLDialect.BigQuery) {
       return false; // TSQL grammar SKIPs whitespace
     } else if (this.dialect === SQLDialect.PLSQL) {
       return true;
@@ -332,14 +280,16 @@ export class SQLAutocomplete {
     return true;
   }
 
+  _getPreferredRulesForProject(): number[] {
+    if (this.dialect === SQLDialect.BigQuery) {
+      return [BigQueryGrammar.BigQueryParser.RULE_project_name];
+    }
+    return [];
+  }
+
   _getPreferredRulesForSchema(): number[] {
     if (this.dialect === SQLDialect.BigQuery) {
-      return [
-        BigQueryGrammar.BigQueryParser.RULE_table_name,
-        BigQueryGrammar.BigQueryParser.RULE_table_name_with_hint,
-        BigQueryGrammar.BigQueryParser.RULE_full_table_name,
-        BigQueryGrammar.BigQueryParser.RULE_table_source,
-      ];
+      return [BigQueryGrammar.BigQueryParser.RULE_dataset_name];
     }
     return [];
   }
@@ -358,22 +308,14 @@ export class SQLAutocomplete {
         MySQLGrammar.MultiQueryMySQLParser.RULE_fieldIdentifier,
       ];
     } else if (this.dialect === SQLDialect.PLSQL) {
-      return [
-        PlSQLGrammar.PlSqlParser.RULE_tableview_name,
-        PlSQLGrammar.PlSqlParser.RULE_table_element,
-      ];
+      return [PlSQLGrammar.PlSqlParser.RULE_tableview_name, PlSQLGrammar.PlSqlParser.RULE_table_element];
     } else if (this.dialect === SQLDialect.PLpgSQL) {
       return [
         PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name,
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
       ];
     } else if (this.dialect === SQLDialect.BigQuery) {
-      return [
-        BigQueryGrammar.BigQueryParser.RULE_table_name,
-        BigQueryGrammar.BigQueryParser.RULE_table_name_with_hint,
-        BigQueryGrammar.BigQueryParser.RULE_full_table_name,
-        BigQueryGrammar.BigQueryParser.RULE_table_source,
-      ];
+      return [BigQueryGrammar.BigQueryParser.RULE_table_name];
     }
     return [];
   }
@@ -390,23 +332,14 @@ export class SQLAutocomplete {
     } else if (this.dialect === SQLDialect.MYSQL) {
       return [MySQLGrammar.MultiQueryMySQLParser.RULE_columnRef];
     } else if (this.dialect === SQLDialect.PLSQL) {
-      return [
-        PlSQLGrammar.PlSqlParser.RULE_column_name,
-        PlSQLGrammar.PlSqlParser.RULE_general_element,
-      ];
+      return [PlSQLGrammar.PlSqlParser.RULE_column_name, PlSQLGrammar.PlSqlParser.RULE_general_element];
     } else if (this.dialect === SQLDialect.PLpgSQL) {
       return [
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_identifier,
       ];
     } else if (this.dialect === SQLDialect.BigQuery) {
-      return [
-        BigQueryGrammar.BigQueryParser.RULE_column_elem,
-        BigQueryGrammar.BigQueryParser.RULE_column_alias,
-        BigQueryGrammar.BigQueryParser.RULE_full_column_name,
-        BigQueryGrammar.BigQueryParser.RULE_output_column_name,
-        BigQueryGrammar.BigQueryParser.RULE_column_declaration,
-      ];
+      return [BigQueryGrammar.BigQueryParser.RULE_column_name];
     }
     return [];
   }
@@ -502,5 +435,13 @@ export class SQLAutocomplete {
       return fullString.substring(token.start, stop + 1);
     }
     return "";
+  }
+
+  _getTokenizeGraveNote(): boolean {
+    if (this.dialect === SQLDialect.BigQuery) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }

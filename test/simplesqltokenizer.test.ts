@@ -1,6 +1,20 @@
 import { SimpleSQLTokenizer } from "../index";
 import { Token } from "antlr4ts-sql";
 
+test("SimpleSQLTokenizer correctly parses SQL queries with grave note", () => {
+  let sqlString = "  SELECT * FROM `schema.table`";
+  let tokenizer = new SimpleSQLTokenizer(sqlString, false, true);
+  expect(tokenizer.nextToken().text).toBe("SELECT");
+  expect(tokenizer.nextToken().text).toBe("*");
+  expect(tokenizer.nextToken().text).toBe("FROM");
+  expect(tokenizer.nextToken().text).toBe("`");
+  expect(tokenizer.nextToken().text).toBe("schema");
+  expect(tokenizer.nextToken().text).toBe(".");
+  expect(tokenizer.nextToken().text).toBe("table");
+  expect(tokenizer.nextToken().text).toBe("`");
+  expect(tokenizer.nextToken().type).toBe(Token.EOF);
+});
+
 test("SimpleSQLTokenizer correctly parses SQL queries", () => {
   let sqlString = "SELECT * FROM table";
   let tokenizer = new SimpleSQLTokenizer(sqlString, false);
