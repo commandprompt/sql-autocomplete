@@ -21,10 +21,18 @@ export class SQLAutocomplete {
   dialect: SQLDialect;
   antlr4tssql: antlr4tsSQL;
   bigQueryProject?: BigQueryProjects;
+  tableNames: string[] = [];
+  columnNames: string[] = [];
 
-  constructor(dialect: SQLDialect, bigQueryProjects?: BigQueryProjects) {
+  constructor(dialect: SQLDialect, bigQueryProjects?: BigQueryProjects, tableNames?: string[], columnNames?: string[]) {
     this.dialect = dialect;
     this.antlr4tssql = new antlr4tsSQL(this.dialect);
+    if (tableNames !== null && tableNames !== undefined) {
+      this.tableNames.push(...tableNames);
+    }
+    if (columnNames !== null && columnNames !== undefined) {
+      this.columnNames.push(...columnNames);
+    }
     if (this.dialect === SQLDialect.BigQuery) {
       if (bigQueryProjects === undefined || bigQueryProjects === null) {
         throw new Error("You must set bigQueryProjects when you use BigQueryDialect.");
@@ -208,130 +216,45 @@ export class SQLAutocomplete {
         );
         autocompleteOptions.unshift(...tableOptions);
       }
+    } else {
+      if (isTableCandidatePosition) {
+        for (const tableName of this.tableNames) {
+          if (tableName.toUpperCase().startsWith(tokenString.toUpperCase())) {
+            autocompleteOptions.unshift(new AutocompleteOption(tableName, AutocompleteOptionType.TABLE));
+          }
+        }
+        if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType.TABLE) {
+          // If none of the table options match, still identify this as a potential table location
+          autocompleteOptions.unshift(new AutocompleteOption(null, AutocompleteOptionType.TABLE));
+        }
+      }
+      if (isColumnCandidatePosition) {
+        for (const columnName of this.columnNames) {
+          if (columnName.toUpperCase().startsWith(tokenString.toUpperCase())) {
+            autocompleteOptions.unshift(new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN));
+          }
+        }
+        if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType.COLUMN) {
+          // If none of the column options match, still identify this as a potential column location
+          autocompleteOptions.unshift(new AutocompleteOption(null, AutocompleteOptionType.COLUMN));
+        }
+      }
     }
 
-    // if (isTableCandidatePosition) {
-    //   const [tableCompletions, isTable] = this._getTableCompletions(
-    //     tokenIndex,
-    //     tokenString,
-    //     allTokens,
-    //     sqlScript,
-    //     indexToAutocomplete
-    //   );
-    //   if (isTable) {
-    //     // Use only table names when we can suggest tables.
-    //     // The reason above is that at "schema_name.part_of_table_name" situation, there are no suggestion candidates except table names.
-    //     return tableCompletions;
-    //   } else if (tableCompletions.length > 0) {
-    //     autocompleteOptions.splice(0, 0, ...tableCompletions);
-    //   }
-    // }
-
-    // Original codes
-    // if (isTableCandidatePosition) {
-    //   for (const tableName of this.tableNames) {
-    //     if (tableName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-    //       autocompleteOptions.unshift(
-    //         new AutocompleteOption(tableName, AutocompleteOptionType.TABLE)
-    //       );
-    //     }
-    //   }
-    //   if (
-    //     autocompleteOptions.length === 0 ||
-    //     autocompleteOptions[0].optionType !== AutocompleteOptionType.TABLE
-    //   ) {
-    //     // If none of the table options match, still identify this as a potential table location
-    //     autocompleteOptions.unshift(
-    //       new AutocompleteOption(null, AutocompleteOptionType.TABLE)
-    //     );
-    //   }
-    // }
-    // if (isColumnCandidatePosition) {
-    //   for (const columnName of this.columnNames) {
-    //     if (columnName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-    //       autocompleteOptions.unshift(
-    //         new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN)
-    //       );
-    //     }
-    //   }
-    //   if (
-    //     autocompleteOptions.length === 0 ||
-    //     autocompleteOptions[0].optionType !== AutocompleteOptionType.COLUMN
-    //   ) {
-    //     // If none of the column options match, still identify this as a potential column location
-    //     autocompleteOptions.unshift(
-    //       new AutocompleteOption(null, AutocompleteOptionType.COLUMN)
-    //     );
-    //   }
-    // }
     return autocompleteOptions;
   }
 
-  // _getTableCompletions(
-  //   tokenIndex: number,
-  //   tokenString: string,
-  //   allTokens: CommonTokenStream,
-  //   sqlScript: string,
-  //   indexToAutocomplete: number
-  // ): [AutocompleteOption[], boolean] {
-  //   // Return true as second return value if completion types are tables.
-  //   let tokenPos = tokenIndex;
-  //   tokenPos--;
+  setTableNames(tableNames: string[]): void {
+    if (tableNames !== null && tableNames !== undefined) {
+      this.tableNames = [...tableNames];
+    }
+  }
 
-  //   // Get token before
-  //   let beforeTokenString = this._getTokenString(allTokens.getTokens()[tokenPos], sqlScript, indexToAutocomplete);
-
-  //   if (beforeTokenString !== ".") {
-  //     // Complete schema names
-  //     const options = [];
-  //     // Trim bk quote if startswith bk quote
-  //     let bkQuote = "";
-  //     let tokenStringTrimmed = tokenString;
-  //     if (tokenString.startsWith("`")) {
-  //       bkQuote = "`";
-  //       tokenStringTrimmed = tokenStringTrimmed.substring(1);
-  //     }
-
-  //     for (const schema of this.schemas) {
-  //       if (schema.name.toUpperCase().startsWith(tokenStringTrimmed.toUpperCase())) {
-  //         options.push(new AutocompleteOption(bkQuote + schema.name, AutocompleteOptionType.SCHEMA));
-  //       }
-  //     }
-  //     return [options, false];
-  //   }
-
-  //   // Complete table names
-  //   tokenPos--;
-  //   const schemaTokenString = this._getTokenString(allTokens.getTokens()[tokenPos], sqlScript, indexToAutocomplete);
-  //   const currentSchemas = this.schemas.filter((s) => s.name === schemaTokenString);
-  //   if (currentSchemas.length === 0) {
-  //     // No such schema
-  //     return [[], false];
-  //   }
-  //   const options = [];
-  //   const currentSchema = currentSchemas[0];
-  //   for (const table of currentSchema.tables) {
-  //     // Complete all tables if current token is "."
-  //     if (table.name.toUpperCase().startsWith(tokenString.toUpperCase())) {
-  //       // CodeMirror Editor cannot recognize dot token
-  //       // TODO: FIX
-  //       options.push(new AutocompleteOption("." + table.name, AutocompleteOptionType.TABLE));
-  //     }
-  //   }
-  //   return [options, true];
-  // }
-
-  // setTableNames(tableNames: string[]): void {
-  //   if (tableNames !== null && tableNames !== undefined) {
-  //     this.tableNames = [...tableNames];
-  //   }
-  // }
-
-  // setColumnNames(columnNames: string[]): void {
-  //   if (columnNames !== null && columnNames !== undefined) {
-  //     this.columnNames = [...columnNames];
-  //   }
-  // }
+  setColumnNames(columnNames: string[]): void {
+    if (columnNames !== null && columnNames !== undefined) {
+      this.columnNames = [...columnNames];
+    }
+  }
 
   _getTokens(sqlScript: string): CommonTokenStream {
     const tokens = this.antlr4tssql.getTokens(sqlScript, []);

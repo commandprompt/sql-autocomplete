@@ -1,45 +1,14 @@
-import {
-  SQLAutocomplete,
-  SQLDialect,
-  AutocompleteOption,
-  AutocompleteOptionType,
-  Schema,
-  Table,
-  Column,
-  Project,
-  BigQueryProjects,
-} from "../index";
+import { SQLAutocomplete, SQLDialect, AutocompleteOption, AutocompleteOptionType } from "../index";
 
 let mysqlAutocomplete: SQLAutocomplete = null;
 let plsqlAutocomplete: SQLAutocomplete = null;
 let plpgsqlAutocomplete: SQLAutocomplete = null;
 let tsqlAutocomplete: SQLAutocomplete = null;
-let bqAutocomplete: SQLAutocomplete = null;
 beforeAll(() => {
   mysqlAutocomplete = new SQLAutocomplete(SQLDialect.MYSQL);
   plsqlAutocomplete = new SQLAutocomplete(SQLDialect.PLSQL);
   plpgsqlAutocomplete = new SQLAutocomplete(SQLDialect.PLpgSQL);
   tsqlAutocomplete = new SQLAutocomplete(SQLDialect.TSQL);
-  bqAutocomplete = new SQLAutocomplete(
-    SQLDialect.BigQuery,
-    new BigQueryProjects(
-      [
-        new Project("my-project", [
-          new Schema("sch1", [new Table("tbl1", [new Column("colA")]), new Table("tbl1-A", [new Column("cola")])]),
-          new Schema("sch2", [new Table("tbl2", [new Column("colB")])]),
-          new Schema("ssch1", [new Table("tbl2-b", [new Column("colB")])]),
-        ]),
-        new Project("your-project", [
-          new Schema("sch3", [new Table("tbl1", [new Column("colA")]), new Table("tbl1-B", [new Column("cola")])]),
-          new Schema("sch4", [new Table("tbl2", [new Column("colB")])]),
-          new Schema("s1", [new Table("tbl1", [new Column("colA")]), new Table("tbl1-A", [new Column("cola")])]),
-          new Schema("ch1", [new Table("tbl1", [new Column("colA")]), new Table("tbl1-A", [new Column("cola")])]),
-          new Schema("ch2", [new Table("tbl2", [new Column("colB")])]),
-        ]),
-      ],
-      "my-project"
-    )
-  );
 });
 
 function containsOptionType(options: AutocompleteOption[], type: AutocompleteOptionType): boolean {
@@ -70,319 +39,120 @@ function allKeywordsBeginWith(options: AutocompleteOption[], value: string): boo
   return true;
 }
 
-// test("autocomplete constructor options", () => {
-//   const autocompleterWithoutNames = new SQLAutocomplete(SQLDialect.MYSQL);
-//   expect(autocompleterWithoutNames.tableNames.length).toBe(0);
-//   expect(autocompleterWithoutNames.columnNames.length).toBe(0);
+test("autocomplete constructor options", () => {
+  const autocompleterWithoutNames = new SQLAutocomplete(SQLDialect.MYSQL);
+  expect(autocompleterWithoutNames.tableNames.length).toBe(0);
+  expect(autocompleterWithoutNames.columnNames.length).toBe(0);
 
-//   const autocompleterWithNames = new SQLAutocomplete(
-//     SQLDialect.MYSQL,
-//     ["table1"],
-//     ["columnA"]
-//   );
-//   expect(autocompleterWithNames.tableNames.length).toBe(1);
-//   expect(autocompleterWithNames.columnNames.length).toBe(1);
+  const autocompleterWithNames = new SQLAutocomplete(SQLDialect.MYSQL, null, ["table1"], ["columnA"]);
+  expect(autocompleterWithNames.tableNames.length).toBe(1);
+  expect(autocompleterWithNames.columnNames.length).toBe(1);
 
-//   // Test for a table location
-//   const sqlWithTable = "SELECT * FROM t";
-//   const options = autocompleterWithoutNames.autocomplete(
-//     sqlWithTable,
-//     sqlWithTable.length
-//   );
-//   expect(
-//     containsOptionType(options, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOption(options, AutocompleteOptionType.TABLE, null)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(options, AutocompleteOptionType.COLUMN)
-//   ).toBeFalsy();
-//   expect(allKeywordsBeginWith(options, "t")).toBeTruthy();
+  // Test for a table location
+  const sqlWithTable = "SELECT * FROM t";
+  const options = autocompleterWithoutNames.autocomplete(sqlWithTable, sqlWithTable.length);
+  expect(containsOptionType(options, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOption(options, AutocompleteOptionType.TABLE, null)).toBeTruthy();
+  expect(containsOptionType(options, AutocompleteOptionType.COLUMN)).toBeFalsy();
+  expect(allKeywordsBeginWith(options, "t")).toBeTruthy();
 
-//   const options2 = autocompleterWithNames.autocomplete(
-//     sqlWithTable,
-//     sqlWithTable.length
-//   );
-//   expect(
-//     containsOptionType(options2, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOption(options2, AutocompleteOptionType.TABLE, null)
-//   ).toBeFalsy();
-//   expect(
-//     containsOption(options2, AutocompleteOptionType.TABLE, "table1")
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(options2, AutocompleteOptionType.COLUMN)
-//   ).toBeFalsy();
-//   expect(allKeywordsBeginWith(options2, "t")).toBeTruthy();
+  const options2 = autocompleterWithNames.autocomplete(sqlWithTable, sqlWithTable.length);
+  expect(containsOptionType(options2, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOption(options2, AutocompleteOptionType.TABLE, null)).toBeFalsy();
+  expect(containsOption(options2, AutocompleteOptionType.TABLE, "table1")).toBeTruthy();
+  expect(containsOptionType(options2, AutocompleteOptionType.COLUMN)).toBeFalsy();
+  expect(allKeywordsBeginWith(options2, "t")).toBeTruthy();
 
-//   // Test for a table or column location
-//   const sqlWithColumn = "SELECT * FROM table1 WHERE c";
-//   const options3 = autocompleterWithoutNames.autocomplete(
-//     sqlWithColumn,
-//     sqlWithColumn.length
-//   );
-//   expect(
-//     containsOptionType(options3, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOption(options3, AutocompleteOptionType.TABLE, null)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(options3, AutocompleteOptionType.COLUMN)
-//   ).toBeTruthy();
-//   expect(
-//     containsOption(options3, AutocompleteOptionType.COLUMN, null)
-//   ).toBeTruthy();
-//   expect(allKeywordsBeginWith(options3, "c")).toBeTruthy();
+  // Test for a table or column location
+  const sqlWithColumn = "SELECT * FROM table1 WHERE c";
+  const options3 = autocompleterWithoutNames.autocomplete(sqlWithColumn, sqlWithColumn.length);
+  expect(containsOptionType(options3, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOption(options3, AutocompleteOptionType.TABLE, null)).toBeTruthy();
+  expect(containsOptionType(options3, AutocompleteOptionType.COLUMN)).toBeTruthy();
+  expect(containsOption(options3, AutocompleteOptionType.COLUMN, null)).toBeTruthy();
+  expect(allKeywordsBeginWith(options3, "c")).toBeTruthy();
 
-//   const options4 = autocompleterWithNames.autocomplete(
-//     sqlWithColumn,
-//     sqlWithColumn.length
-//   );
-//   expect(
-//     containsOptionType(options4, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOption(options4, AutocompleteOptionType.TABLE, "table1")
-//   ).toBeFalsy();
-//   expect(
-//     containsOption(options4, AutocompleteOptionType.TABLE, null)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(options4, AutocompleteOptionType.COLUMN)
-//   ).toBeTruthy();
-//   expect(
-//     containsOption(options4, AutocompleteOptionType.COLUMN, "columnA")
-//   ).toBeTruthy();
-//   expect(allKeywordsBeginWith(options4, "c")).toBeTruthy();
-// });
-
-// test("autocomplete detects table location", () => {
-//   const sql = "SELECT * FROM t";
-//   const tsqlOptions = tsqlAutocomplete.autocomplete(sql, sql.length);
-//   expect(
-//     containsOptionType(tsqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(tsqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeFalsy();
-//   expect(allKeywordsBeginWith(tsqlOptions, "t")).toBeTruthy();
-//   const mysqlOptions = mysqlAutocomplete.autocomplete(sql, sql.length);
-//   expect(
-//     containsOptionType(mysqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeFalsy();
-//   expect(allKeywordsBeginWith(mysqlOptions, "t")).toBeTruthy();
-//   const plsqlOptions = plsqlAutocomplete.autocomplete(sql, sql.length);
-//   expect(
-//     containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeFalsy();
-//   expect(allKeywordsBeginWith(plsqlOptions, "t")).toBeTruthy();
-//   const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql, sql.length);
-//   expect(
-//     containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeFalsy();
-//   expect(allKeywordsBeginWith(plpgsqlOptions, "t")).toBeTruthy();
-// });
-
-// test("autocomplete detects column location", () => {
-//   const sql = "SELECT * FROM table1 WHERE c";
-//   const tsqlOptions = tsqlAutocomplete.autocomplete(sql, sql.length);
-//   expect(
-//     containsOptionType(tsqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(tsqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeTruthy();
-//   expect(allKeywordsBeginWith(tsqlOptions, "c")).toBeTruthy();
-//   const mysqlOptions = mysqlAutocomplete.autocomplete(sql, sql.length);
-//   expect(
-//     containsOptionType(mysqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeTruthy();
-//   expect(allKeywordsBeginWith(mysqlOptions, "c")).toBeTruthy();
-//   const plsqlOptions = plsqlAutocomplete.autocomplete(sql, sql.length);
-//   expect(
-//     containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeTruthy();
-//   expect(allKeywordsBeginWith(plsqlOptions, "c")).toBeTruthy();
-//   const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql, sql.length);
-//   expect(
-//     containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeTruthy();
-//   expect(allKeywordsBeginWith(plpgsqlOptions, "c")).toBeTruthy();
-// });
-
-// test("autocomplete next word", () => {
-//   const sql = "SELECT ";
-//   const tsqlOptions = tsqlAutocomplete.autocomplete(sql);
-//   expect(
-//     containsOptionType(tsqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(tsqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeTruthy();
-//   const mysqlOptions = mysqlAutocomplete.autocomplete(sql);
-//   expect(
-//     containsOptionType(mysqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeTruthy();
-//   const plsqlOptions = plsqlAutocomplete.autocomplete(sql);
-//   expect(
-//     containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeTruthy();
-//   const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql);
-//   expect(
-//     containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeTruthy();
-// });
-
-// test("autocomplete when position is not provided", () => {
-//   const sql = "SELECT * FR";
-//   const tsqlOptions = tsqlAutocomplete.autocomplete(sql);
-//   expect(
-//     containsOptionType(tsqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeFalsy();
-//   expect(
-//     containsOptionType(tsqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeFalsy();
-//   expect(allKeywordsBeginWith(tsqlOptions, "FR")).toBeTruthy();
-//   const mysqlOptions = mysqlAutocomplete.autocomplete(sql);
-//   expect(
-//     containsOptionType(mysqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeFalsy();
-//   expect(
-//     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeFalsy();
-//   expect(allKeywordsBeginWith(mysqlOptions, "FR")).toBeTruthy();
-//   const plsqlOptions = plsqlAutocomplete.autocomplete(sql);
-//   expect(
-//     containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeFalsy();
-//   expect(
-//     containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeFalsy();
-//   expect(allKeywordsBeginWith(plsqlOptions, "FR")).toBeTruthy();
-//   const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql);
-//   expect(
-//     containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)
-//   ).toBeFalsy();
-//   expect(
-//     containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
-//   ).toBeFalsy();
-//   expect(allKeywordsBeginWith(plpgsqlOptions, "FR")).toBeTruthy();
-// });
-
-test("autocomplete when bigquery keyword completion", () => {
-  const sql = "select * fr";
-  const bqOptions = bqAutocomplete.autocomplete(sql);
-  expect(containsOptionType(bqOptions, AutocompleteOptionType.KEYWORD)).toBeTruthy();
-  expect(bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.KEYWORD)[0].value).toEqual("FROM");
+  const options4 = autocompleterWithNames.autocomplete(sqlWithColumn, sqlWithColumn.length);
+  expect(containsOptionType(options4, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOption(options4, AutocompleteOptionType.TABLE, "table1")).toBeFalsy();
+  expect(containsOption(options4, AutocompleteOptionType.TABLE, null)).toBeTruthy();
+  expect(containsOptionType(options4, AutocompleteOptionType.COLUMN)).toBeTruthy();
+  expect(containsOption(options4, AutocompleteOptionType.COLUMN, "columnA")).toBeTruthy();
+  expect(allKeywordsBeginWith(options4, "c")).toBeTruthy();
 });
 
-test("autocomplete when bigquery project completion", () => {
-  const sql = "SELECT * FROM `my";
-  const bqOptions = bqAutocomplete.autocomplete(sql);
-  expect(containsOptionType(bqOptions, AutocompleteOptionType.PROJECT)).toBeTruthy();
-  expect(bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.PROJECT)[0].value).toEqual(
-    "`my-project`."
-  );
+test("autocomplete detects table location", () => {
+  const sql = "SELECT * FROM t";
+  const tsqlOptions = tsqlAutocomplete.autocomplete(sql, sql.length);
+  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.COLUMN)).toBeFalsy();
+  expect(allKeywordsBeginWith(tsqlOptions, "t")).toBeTruthy();
+  const mysqlOptions = mysqlAutocomplete.autocomplete(sql, sql.length);
+  expect(containsOptionType(mysqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)).toBeFalsy();
+  expect(allKeywordsBeginWith(mysqlOptions, "t")).toBeTruthy();
+  const plsqlOptions = plsqlAutocomplete.autocomplete(sql, sql.length);
+  expect(containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)).toBeFalsy();
+  expect(allKeywordsBeginWith(plsqlOptions, "t")).toBeTruthy();
+  const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql, sql.length);
+  expect(containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)).toBeFalsy();
+  expect(allKeywordsBeginWith(plpgsqlOptions, "t")).toBeTruthy();
 });
 
-test("autocomplete when bigquery schema completion with project", () => {
-  const sql = "SELECT * FROM `your-project`.ch";
-  const bqOptions = bqAutocomplete.autocomplete(sql);
-  expect(containsOptionType(bqOptions, AutocompleteOptionType.SCHEMA)).toBeTruthy();
-  const schemaOptions = bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.SCHEMA);
-  expect(schemaOptions.length).toEqual(4);
-  expect(schemaOptions[0].value).toEqual("`sch3`.");
+test("autocomplete detects column location", () => {
+  const sql = "SELECT * FROM table1 WHERE c";
+  const tsqlOptions = tsqlAutocomplete.autocomplete(sql, sql.length);
+  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.COLUMN)).toBeTruthy();
+  expect(allKeywordsBeginWith(tsqlOptions, "c")).toBeTruthy();
+  const mysqlOptions = mysqlAutocomplete.autocomplete(sql, sql.length);
+  expect(containsOptionType(mysqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)).toBeTruthy();
+  expect(allKeywordsBeginWith(mysqlOptions, "c")).toBeTruthy();
+  const plsqlOptions = plsqlAutocomplete.autocomplete(sql, sql.length);
+  expect(containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)).toBeTruthy();
+  expect(allKeywordsBeginWith(plsqlOptions, "c")).toBeTruthy();
+  const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql, sql.length);
+  expect(containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)).toBeTruthy();
+  expect(allKeywordsBeginWith(plpgsqlOptions, "c")).toBeTruthy();
 });
 
-test("autocomplete when bigquery schema completion without project", () => {
-  const sql = "SELECT * FROM ch1";
-  const bqOptions = bqAutocomplete.autocomplete(sql);
-  expect(containsOptionType(bqOptions, AutocompleteOptionType.SCHEMA)).toBeTruthy();
-  const schemaOptions = bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.SCHEMA);
-  expect(schemaOptions.length).toEqual(2);
-  expect(schemaOptions[0].value).toEqual("`my-project`.`sch1`.");
+test("autocomplete next word", () => {
+  const sql = "SELECT ";
+  const tsqlOptions = tsqlAutocomplete.autocomplete(sql);
+  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.COLUMN)).toBeTruthy();
+  const mysqlOptions = mysqlAutocomplete.autocomplete(sql);
+  expect(containsOptionType(mysqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)).toBeTruthy();
+  const plsqlOptions = plsqlAutocomplete.autocomplete(sql);
+  expect(containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)).toBeTruthy();
+  const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql);
+  expect(containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
+  expect(containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)).toBeTruthy();
 });
 
-test("autocomplete when bigquery table completion with schema", () => {
-  const sql = "SELECT * FROM `sch1`.A";
-  const bqOptions = bqAutocomplete.autocomplete(sql);
-  expect(containsOptionType(bqOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
-  const tableOptions = bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.TABLE);
-  expect(tableOptions.length).toEqual(1);
-  expect(tableOptions[0].value).toEqual("`tbl1-A`");
+test("autocomplete when position is not provided", () => {
+  const sql = "SELECT * FR";
+  const tsqlOptions = tsqlAutocomplete.autocomplete(sql);
+  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.TABLE)).toBeFalsy();
+  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.COLUMN)).toBeFalsy();
+  expect(allKeywordsBeginWith(tsqlOptions, "FR")).toBeTruthy();
+  const mysqlOptions = mysqlAutocomplete.autocomplete(sql);
+  expect(containsOptionType(mysqlOptions, AutocompleteOptionType.TABLE)).toBeFalsy();
+  expect(containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)).toBeFalsy();
+  expect(allKeywordsBeginWith(mysqlOptions, "FR")).toBeTruthy();
+  const plsqlOptions = plsqlAutocomplete.autocomplete(sql);
+  expect(containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)).toBeFalsy();
+  expect(containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)).toBeFalsy();
+  expect(allKeywordsBeginWith(plsqlOptions, "FR")).toBeTruthy();
+  const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql);
+  expect(containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)).toBeFalsy();
+  expect(containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)).toBeFalsy();
+  expect(allKeywordsBeginWith(plpgsqlOptions, "FR")).toBeTruthy();
 });
-
-test("autocomplete when bigquery table completion with project and schema", () => {
-  const sql = "SELECT * FROM `your-project`.`sch3`.-b";
-  const bqOptions = bqAutocomplete.autocomplete(sql);
-  expect(containsOptionType(bqOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
-  const tableOptions = bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.TABLE);
-  expect(tableOptions.length).toEqual(1);
-  expect(tableOptions[0].value).toEqual("`tbl1-B`");
-});
-
-test("autocomplete when bigquery table completion without project and schema", () => {
-  const sql = "SELECT * FROM tbl2";
-  const bqOptions = bqAutocomplete.autocomplete(sql);
-  expect(containsOptionType(bqOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
-  const tableOptions = bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.TABLE);
-  expect(tableOptions.length).toEqual(2);
-  expect(tableOptions[0].value).toEqual("`my-project`.`sch2`.`tbl2`");
-});
-// test("autocomplete when bigquery table completion", () => {
-//   const sql = "SELECT * FROM sch1.t";
-//   const bqOptions = bqAutocomplete.autocomplete(sql);
-//   expect(
-//     containsOptionType(bqOptions, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.TABLE)
-//       .length
-//   ).toEqual(2);
-// });
-
-// test("autocomplete when bigquery multiline completion", () => {
-//   const sql = `SELECT
-//    *
-//   FROM
-//    \`sch1.tb`;
-//   const bqOptions = bqAutocomplete.autocomplete(sql);
-//   expect(
-//     containsOptionType(bqOptions, AutocompleteOptionType.TABLE)
-//   ).toBeTruthy();
-//   expect(
-//     bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.TABLE)
-//       .length
-//   ).toEqual(2);
-// });
