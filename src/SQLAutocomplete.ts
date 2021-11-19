@@ -155,6 +155,9 @@ export class SQLAutocomplete {
       let i = 1;
       let expectDot = true;
       while (true) {
+        if (tokenIndex < i) {
+          break;
+        }
         let ts: any = this._getTokenString(allTokens.getTokens()[tokenIndex - i], sqlScript, indexToAutocomplete);
         if (values.length >= 2) {
           break;

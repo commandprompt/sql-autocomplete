@@ -62,6 +62,13 @@ function allKeywordsBeginWith(options: AutocompleteOption[], value: string): boo
   return true;
 }
 
+test("autocomplete when bigquery select completion", () => {
+  const sql = "sel";
+  const bqOptions = bqAutocomplete.autocomplete(sql);
+  expect(containsOptionType(bqOptions, AutocompleteOptionType.KEYWORD)).toBeTruthy();
+  expect(bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.KEYWORD)[0].value).toEqual("SELECT");
+});
+
 test("autocomplete when bigquery keyword completion", () => {
   const sql = "select * fr";
   const bqOptions = bqAutocomplete.autocomplete(sql);
