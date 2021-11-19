@@ -676,9 +676,9 @@ antlr4-c3@^1.1.15:
   dependencies:
     antlr4ts "^0.5.0-alpha.3"
 
-"antlr4ts-sql@https://github.com/Attsun1031/antlr4ts-sql.git#bq-custom-grammer":
+"antlr4ts-sql@https://github.com/Attsun1031/antlr4ts-sql.git#v2.0.0":
   version "1.2.2"
-  resolved "https://github.com/Attsun1031/antlr4ts-sql.git#49a0ccc83ef0c2e7334f2ff513c73b9b4d44b08c"
+  resolved "https://github.com/Attsun1031/antlr4ts-sql.git#2199e59c1ed7854ebfd914beca4a3fdfa4303c18"
   dependencies:
     antlr4ts "^0.5.0-alpha.4"
 
