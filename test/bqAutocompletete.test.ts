@@ -89,7 +89,7 @@ test("autocomplete when bigquery schema completion with project", () => {
   expect(containsOptionType(bqOptions, AutocompleteOptionType.SCHEMA)).toBeTruthy();
   const schemaOptions = bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.SCHEMA);
   expect(schemaOptions.length).toEqual(4);
-  expect(schemaOptions[0].value).toEqual("sch3.");
+  expect(schemaOptions[0].value).toEqual("`your-project.sch3.");
 });
 
 test("autocomplete when bigquery schema completion with project and grave", () => {
@@ -98,7 +98,7 @@ test("autocomplete when bigquery schema completion with project and grave", () =
   expect(containsOptionType(bqOptions, AutocompleteOptionType.SCHEMA)).toBeTruthy();
   const schemaOptions = bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.SCHEMA);
   expect(schemaOptions.length).toEqual(4);
-  expect(schemaOptions[0].value).toEqual("sch3.");
+  expect(schemaOptions[0].value).toEqual("`your-project.sch3.");
 });
 
 test("autocomplete when bigquery schema completion without project", () => {
@@ -116,7 +116,7 @@ test("autocomplete when bigquery table completion with schema", () => {
   expect(containsOptionType(bqOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
   const tableOptions = bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.TABLE);
   expect(tableOptions.length).toEqual(1);
-  expect(tableOptions[0].value).toEqual("tbl1-A`");
+  expect(tableOptions[0].value).toEqual("`my-project.sch1.tbl1-A`");
 });
 
 test("autocomplete when bigquery table completion with project and schema", () => {
@@ -125,7 +125,7 @@ test("autocomplete when bigquery table completion with project and schema", () =
   expect(containsOptionType(bqOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
   const tableOptions = bqOptions.filter((opt) => opt.optionType === AutocompleteOptionType.TABLE);
   expect(tableOptions.length).toEqual(1);
-  expect(tableOptions[0].value).toEqual("tbl1-B`");
+  expect(tableOptions[0].value).toEqual("`your-project.sch3.tbl1-B`");
 });
 
 test("autocomplete when bigquery table completion without project and schema", () => {
