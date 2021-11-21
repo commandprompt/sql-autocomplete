@@ -144,7 +144,7 @@ export class SQLAutocomplete {
         const projects = this.bigQueryProject.listMatchedProjects(tokenString);
         // Add "." at the end for usability.
         const projectOptions = projects.map(
-          (pj) => new AutocompleteOption(`${pj.getName(withGrave)}.`, AutocompleteOptionType.PROJECT)
+          (pj) => new AutocompleteOption(`\`${pj.getName()}.`, AutocompleteOptionType.PROJECT)
         );
         autocompleteOptions.unshift(...projectOptions);
       }
@@ -162,6 +162,7 @@ export class SQLAutocomplete {
         if (values.length >= 2) {
           break;
         }
+        console.log(ts);
         if (ts === "`") {
           i += 1;
           continue;
@@ -191,7 +192,7 @@ export class SQLAutocomplete {
             new AutocompleteOption(
               // Add "." at the end for usability.
               // Complete with project if no project set.
-              `${currentProject !== null ? s.getName(withGrave) : s.getFullName(withGrave)}.`,
+              currentProject !== null ? `${s.getName()}.` : `\`${s.getFullName()}.`,
               AutocompleteOptionType.SCHEMA
             )
         );
@@ -213,7 +214,7 @@ export class SQLAutocomplete {
           (t) =>
             new AutocompleteOption(
               // Complete with project and schema if no project set.
-              currentSchema !== null ? t.getName(withGrave) : t.getFullName(withGrave),
+              currentSchema !== null ? `${t.getName()}\`` : `\`${t.getFullName()}\``,
               AutocompleteOptionType.TABLE
             )
         );
@@ -393,6 +394,7 @@ export class SQLAutocomplete {
       return [
         BigQueryGrammar.BigQueryParser.DOT,
         BigQueryGrammar.BigQueryParser.COMMA,
+        BigQueryGrammar.BigQueryParser.BK_QUOTE,
         BigQueryGrammar.BigQueryParser.ID,
         BigQueryGrammar.BigQueryParser.LR_BRACKET,
         BigQueryGrammar.BigQueryParser.RR_BRACKET,
