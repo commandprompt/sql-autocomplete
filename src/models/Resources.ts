@@ -1,9 +1,3 @@
-import { With_storage_parameterContext } from "antlr4ts-sql/dist/src/grammar-output/plpgsql/PLpgSQLParser";
-
-function wrapGrave(s: string): string {
-  return `\`${s}\``;
-}
-
 export class Column {
   name: string;
   columns: string[] | null;
@@ -18,16 +12,12 @@ export class Column {
     this.table = table;
   }
 
-  getName(withGrave: boolean = false): string {
-    if (withGrave) {
-      return wrapGrave(this.name);
-    } else {
-      return this.name;
-    }
+  getName(): string {
+    return this.name;
   }
 
-  getFullName(withGrave: boolean = false): string {
-    return `${this.table.getFullName(withGrave)}.${this.getName(withGrave)}`;
+  getFullName(): string {
+    return `${this.table.getFullName()}.${this.getName()}`;
   }
 }
 
@@ -46,16 +36,12 @@ export class Table {
     this.schema = schema;
   }
 
-  getName(withGrave: boolean = false): string {
-    if (withGrave) {
-      return wrapGrave(this.name);
-    } else {
-      return this.name;
-    }
+  getName(): string {
+    return this.name;
   }
 
-  getFullName(withGrave: boolean = false): string {
-    return `${this.schema.getFullName(withGrave)}.${this.getName(withGrave)}`;
+  getFullName(): string {
+    return `${this.schema.getFullName()}.${this.getName()}`;
   }
 }
 
@@ -74,16 +60,12 @@ export class Schema {
     this.project = project;
   }
 
-  getName(withGrave: boolean = false): string {
-    if (withGrave) {
-      return wrapGrave(this.name);
-    } else {
-      return this.name;
-    }
+  getName(): string {
+    return this.name;
   }
 
-  getFullName(withGrave: boolean = false): string {
-    return `${this.project.getName(withGrave)}.${this.getName(withGrave)}`;
+  getFullName(): string {
+    return `${this.project.getName()}.${this.getName()}`;
   }
 }
 
@@ -97,12 +79,8 @@ export class Project {
     this.schemas.forEach((s) => s.setProject(this));
   }
 
-  getName(withGrave: boolean = false): string {
-    if (withGrave) {
-      return wrapGrave(this.name);
-    } else {
-      return this.name;
-    }
+  getName(): string {
+    return this.name;
   }
 }
 
