@@ -162,7 +162,6 @@ export class SQLAutocomplete {
         if (values.length >= 2) {
           break;
         }
-        console.log(ts);
         if (ts === "`") {
           i += 1;
           continue;
@@ -192,7 +191,8 @@ export class SQLAutocomplete {
             new AutocompleteOption(
               // Add "." at the end for usability.
               // Complete with project if no project set.
-              currentProject !== null ? `${s.getName()}.` : `\`${s.getFullName()}.`,
+              // currentProject !== null ? `${s.getName()}.` : `\`${s.getFullName()}.`,
+              `\`${s.getFullName()}.`,
               AutocompleteOptionType.SCHEMA
             )
         );
@@ -214,7 +214,8 @@ export class SQLAutocomplete {
           (t) =>
             new AutocompleteOption(
               // Complete with project and schema if no project set.
-              currentSchema !== null ? `${t.getName()}\`` : `\`${t.getFullName()}\``,
+              // currentSchema !== null ? `${t.getName()}\`` : `\`${t.getFullName()}\``,
+              `\`${t.getFullName()}\``,
               AutocompleteOptionType.TABLE
             )
         );
