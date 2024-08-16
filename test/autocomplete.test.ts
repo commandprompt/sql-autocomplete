@@ -44,7 +44,7 @@ test("autocomplete constructor options", () => {
   expect(autocompleterWithoutNames.tableNames.length).toBe(0);
   expect(autocompleterWithoutNames.columnNames.length).toBe(0);
 
-  const autocompleterWithNames = new SQLAutocomplete(SQLDialect.MYSQL, null, ["table1"], ["columnA"]);
+  const autocompleterWithNames = new SQLAutocomplete(SQLDialect.MYSQL, ["table1"], ["columnA"]);
   expect(autocompleterWithNames.tableNames.length).toBe(1);
   expect(autocompleterWithNames.columnNames.length).toBe(1);
 

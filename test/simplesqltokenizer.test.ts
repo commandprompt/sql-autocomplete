@@ -3,7 +3,7 @@ import { Token } from "antlr4ts-sql";
 
 test("SimpleSQLTokenizer correctly parses SQL queries with grave note", () => {
   let sqlString = "  SELECT * FROM `schema.table`";
-  let tokenizer = new SimpleSQLTokenizer(sqlString, false, true);
+  let tokenizer = new SimpleSQLTokenizer(sqlString, false);
   expect(tokenizer.nextToken().text).toBe("SELECT");
   expect(tokenizer.nextToken().text).toBe("*");
   expect(tokenizer.nextToken().text).toBe("FROM");

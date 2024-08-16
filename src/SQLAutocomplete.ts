@@ -1,6 +1,5 @@
 import {
   antlr4tsSQL,
-  BigQueryGrammar,
   CommonTokenStream,
   PredictionMode,
   MySQLGrammar,
@@ -15,16 +14,14 @@ import { CodeCompletionCore } from "antlr4-c3";
 import { AutocompleteOption } from "./models/AutocompleteOption";
 import { AutocompleteOptionType } from "./models/AutocompleteOptionType";
 import { SimpleSQLTokenizer } from "./models/SimpleSQLTokenizer";
-import { BigQueryProjects } from "./models/Resources";
 
 export class SQLAutocomplete {
   dialect: SQLDialect;
   antlr4tssql: antlr4tsSQL;
-  bigQueryProject?: BigQueryProjects;
   tableNames: string[] = [];
   columnNames: string[] = [];
 
-  constructor(dialect: SQLDialect, bigQueryProjects?: BigQueryProjects, tableNames?: string[], columnNames?: string[]) {
+  constructor(dialect: SQLDialect, tableNames?: string[], columnNames?: string[]) {
     this.dialect = dialect;
     this.antlr4tssql = new antlr4tsSQL(this.dialect);
     if (tableNames !== null && tableNames !== undefined) {
@@ -32,12 +29,6 @@ export class SQLAutocomplete {
     }
     if (columnNames !== null && columnNames !== undefined) {
       this.columnNames.push(...columnNames);
-    }
-    if (this.dialect === SQLDialect.BigQuery) {
-      if (bigQueryProjects === undefined || bigQueryProjects === null) {
-        throw new Error("You must set bigQueryProjects when you use BigQueryDialect.");
-      }
-      this.bigQueryProject = bigQueryProjects;
     }
   }
 
@@ -47,7 +38,6 @@ export class SQLAutocomplete {
       // it's not needed and keeping it in may impact which token gets selected for prediction
       sqlScript = sqlScript.substring(0, atIndex);
     }
-    const withGrave = true;
     const tokens = this._getTokens(sqlScript);
     const parser = this._getParser(tokens);
     const core = new CodeCompletionCore(parser);
@@ -69,8 +59,7 @@ export class SQLAutocomplete {
     }
     const simpleSQLTokenizer = new SimpleSQLTokenizer(
       sqlScript,
-      this._tokenizeWhitespace(),
-      this._getTokenizeGraveNote()
+      this._tokenizeWhitespace()
     );
     const allTokens = new CommonTokenStream(simpleSQLTokenizer);
     const tokenIndex = this._getTokenIndexAt(allTokens.getTokens(), sqlScript, indexToAutocomplete);
@@ -138,111 +127,26 @@ export class SQLAutocomplete {
       }
     }
 
-    if (this.dialect === SQLDialect.BigQuery) {
-      // Complete project
-      if (isProjectCandidatePosition) {
-        const projects = this.bigQueryProject.listMatchedProjects(tokenString);
-        // Add "." at the end for usability.
-        const projectOptions = projects.map(
-          (pj) => new AutocompleteOption(`\`${pj.getName()}.`, AutocompleteOptionType.PROJECT)
-        );
-        autocompleteOptions.unshift(...projectOptions);
-      }
-
-      // Collect input project and schema.
-      // values[0] will be schema or project, and values[1] will be schema.
-      const values = [];
-      let i = 1;
-      let expectDot = true;
-      while (true) {
-        if (tokenIndex < i) {
-          break;
-        }
-        let ts: any = this._getTokenString(allTokens.getTokens()[tokenIndex - i], sqlScript, indexToAutocomplete);
-        if (values.length >= 2) {
-          break;
-        }
-        if (ts === "`") {
-          i += 1;
-          continue;
-        }
-
-        if (expectDot && ts === ".") {
-          expectDot = false;
-          i += 1;
-        } else if (!expectDot && ts !== "") {
-          values.unshift(ts);
-          expectDot = true;
-          i += 1;
-        } else {
-          break;
+    if (isTableCandidatePosition) {
+      for (const tableName of this.tableNames) {
+        if (tableName.toUpperCase().startsWith(tokenString.toUpperCase())) {
+          autocompleteOptions.unshift(new AutocompleteOption(tableName, AutocompleteOptionType.TABLE));
         }
       }
-
-      // Complete schema
-      if (isSchemaCandidatePosition) {
-        let currentProject: string = null;
-        if (values.length === 1) {
-          currentProject = values[0];
-        }
-        const schemas = this.bigQueryProject.listMatchedSchemas(tokenString, currentProject);
-        const schemaOptions = schemas.map(
-          (s) =>
-            new AutocompleteOption(
-              // Add "." at the end for usability.
-              // Complete with project if no project set.
-              // currentProject !== null ? `${s.getName()}.` : `\`${s.getFullName()}.`,
-              `\`${s.getFullName()}.`,
-              AutocompleteOptionType.SCHEMA
-            )
-        );
-        autocompleteOptions.unshift(...schemaOptions);
+      if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType.TABLE) {
+        // If none of the table options match, still identify this as a potential table location
+        autocompleteOptions.unshift(new AutocompleteOption(null, AutocompleteOptionType.TABLE));
       }
-
-      // Complete table
-      if (isTableCandidatePosition) {
-        let currentSchema: string = null;
-        let currentProject: string = null;
-        if (values.length === 1) {
-          currentSchema = values[0];
-        } else if (values.length === 2) {
-          currentProject = values[0];
-          currentSchema = values[1];
-        }
-        const tables = this.bigQueryProject.listMatchedTables(tokenString, currentSchema, currentProject);
-        const tableOptions = tables.map(
-          (t) =>
-            new AutocompleteOption(
-              // Complete with project and schema if no project set.
-              // currentSchema !== null ? `${t.getName()}\`` : `\`${t.getFullName()}\``,
-              `\`${t.getFullName()}\``,
-              AutocompleteOptionType.TABLE
-            )
-        );
-        autocompleteOptions.unshift(...tableOptions);
-      }
-    } else {
-      if (isTableCandidatePosition) {
-        for (const tableName of this.tableNames) {
-          if (tableName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-            autocompleteOptions.unshift(new AutocompleteOption(tableName, AutocompleteOptionType.TABLE));
-          }
-        }
-        if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType.TABLE) {
-          // If none of the table options match, still identify this as a potential table location
-          autocompleteOptions.unshift(new AutocompleteOption(null, AutocompleteOptionType.TABLE));
+    }
+    if (isColumnCandidatePosition) {
+      for (const columnName of this.columnNames) {
+        if (columnName.toUpperCase().startsWith(tokenString.toUpperCase())) {
+          autocompleteOptions.unshift(new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN));
         }
       }
-      if (isColumnCandidatePosition) {
-        for (const columnName of this.columnNames) {
-          if (columnName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-            autocompleteOptions.unshift(new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN));
-          }
-        }
-        if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType.COLUMN) {
-          // If none of the column options match, still identify this as a potential column location
-          autocompleteOptions.unshift(new AutocompleteOption(null, AutocompleteOptionType.COLUMN));
-        }
+      if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType.COLUMN) {
+        // If none of the column options match, still identify this as a potential column location
+        autocompleteOptions.unshift(new AutocompleteOption(null, AutocompleteOptionType.COLUMN));
       }
     }
 
@@ -273,7 +177,7 @@ export class SQLAutocomplete {
   }
 
   _tokenizeWhitespace() {
-    if (this.dialect === SQLDialect.TSQL || this.dialect === SQLDialect.BigQuery) {
+    if (this.dialect === SQLDialect.TSQL) {
       return false; // TSQL grammar SKIPs whitespace
     } else if (this.dialect === SQLDialect.PLSQL) {
       return true;
@@ -286,16 +190,10 @@ export class SQLAutocomplete {
   }
 
   _getPreferredRulesForProject(): number[] {
-    if (this.dialect === SQLDialect.BigQuery) {
-      return [BigQueryGrammar.BigQueryParser.RULE_project_name];
-    }
     return [];
   }
 
   _getPreferredRulesForSchema(): number[] {
-    if (this.dialect === SQLDialect.BigQuery) {
-      return [BigQueryGrammar.BigQueryParser.RULE_dataset_name];
-    }
     return [];
   }
 
@@ -319,8 +217,6 @@ export class SQLAutocomplete {
         PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name,
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
       ];
-    } else if (this.dialect === SQLDialect.BigQuery) {
-      return [BigQueryGrammar.BigQueryParser.RULE_table_name];
     }
     return [];
   }
@@ -343,8 +239,6 @@ export class SQLAutocomplete {
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_identifier,
       ];
-    } else if (this.dialect === SQLDialect.BigQuery) {
-      return [BigQueryGrammar.BigQueryParser.RULE_column_name];
     }
     return [];
   }
@@ -391,15 +285,6 @@ export class SQLAutocomplete {
         PLpgSQLGrammar.PLpgSQLParser.LEFT_BRACKET,
         PLpgSQLGrammar.PLpgSQLParser.RIGHT_BRACKET,
       ];
-    } else if (this.dialect === SQLDialect.BigQuery) {
-      return [
-        BigQueryGrammar.BigQueryParser.DOT,
-        BigQueryGrammar.BigQueryParser.COMMA,
-        BigQueryGrammar.BigQueryParser.BK_QUOTE,
-        BigQueryGrammar.BigQueryParser.ID,
-        BigQueryGrammar.BigQueryParser.LR_BRACKET,
-        BigQueryGrammar.BigQueryParser.RR_BRACKET,
-      ];
     }
     return [];
   }
@@ -441,13 +326,5 @@ export class SQLAutocomplete {
       return fullString.substring(token.start, stop + 1);
     }
     return "";
-  }
-
-  _getTokenizeGraveNote(): boolean {
-    if (this.dialect === SQLDialect.BigQuery) {
-      return true;
-    } else {
-      return false;
-    }
   }
 }

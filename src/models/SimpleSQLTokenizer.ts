@@ -37,16 +37,12 @@ export class SimpleSQLTokenizer implements TokenSource {
   constructor(
     value: string,
     tokenizeWhitespace: boolean,
-    tokenizeGraveNote: boolean = false
   ) {
     this.value = value;
     this._currentIndex = 0;
     this._insideQuote = false;
     if (tokenizeWhitespace) {
       this.specialCharacters.push(...this.whitespaceCharacters);
-    }
-    if (tokenizeGraveNote) {
-      this.specialCharacters.push("`");
     }
   }
 
