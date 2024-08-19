@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.SimpleSQLTokenizer = void 0;
-const antlr4ts_sql_1 = require("antlr4ts-sql");
+import { Token, CommonToken, } from "antlr4ts-sql";
 /**
  * A very simple tokenizer for splitting a string into tokens based on
  * whitespace. Handles SQL quote characters (i.e. '). Also splits ; and . as separate tokens
@@ -12,7 +9,7 @@ const antlr4ts_sql_1 = require("antlr4ts-sql");
  * any string location, regardless of the validity of the SQL string.
  * See SQLAutocomplete.getTokenIndexAt for usage.
  */
-class SimpleSQLTokenizer {
+export class SimpleSQLTokenizer {
     constructor(value, tokenizeWhitespace) {
         this.specialCharacters = [";", ".", "(", ")"];
         this.whitespaceCharacters = [
@@ -62,16 +59,15 @@ class SimpleSQLTokenizer {
             }
             if (start !== null && stop !== null) {
                 this._currentIndex++;
-                return new antlr4ts_sql_1.CommonToken(antlr4ts_sql_1.Token.DEFAULT_CHANNEL, this.value.substring(start, stop + 1), {}, null, start, stop);
+                return new CommonToken(Token.DEFAULT_CHANNEL, this.value.substring(start, stop + 1), {}, null, start, stop);
             }
             if (this.specialCharacters.includes(currentChar) && !this._insideQuote) {
                 this._currentIndex++;
-                return new antlr4ts_sql_1.CommonToken(antlr4ts_sql_1.Token.DEFAULT_CHANNEL, currentChar, {}, null, this._currentIndex - 1, this._currentIndex - 1);
+                return new CommonToken(Token.DEFAULT_CHANNEL, currentChar, {}, null, this._currentIndex - 1, this._currentIndex - 1);
             }
             this._currentIndex++;
         }
-        return new antlr4ts_sql_1.CommonToken(antlr4ts_sql_1.Token.EOF);
+        return new CommonToken(Token.EOF);
     }
 }
-exports.SimpleSQLTokenizer = SimpleSQLTokenizer;
 //# sourceMappingURL=SimpleSQLTokenizer.js.map

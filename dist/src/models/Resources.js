@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Project = exports.Schema = exports.Table = exports.Column = void 0;
-class Column {
+export class Column {
     constructor(name, columns = null) {
         this.name = name;
         this.columns = columns;
@@ -16,8 +13,7 @@ class Column {
         return `${this.table.getFullName()}.${this.getName()}`;
     }
 }
-exports.Column = Column;
-class Table {
+export class Table {
     constructor(name, columns) {
         this.name = name;
         this.columns = columns;
@@ -33,8 +29,7 @@ class Table {
         return `${this.schema.getFullName()}.${this.getName()}`;
     }
 }
-exports.Table = Table;
-class Schema {
+export class Schema {
     constructor(name, tables) {
         this.name = name;
         this.tables = tables;
@@ -50,8 +45,7 @@ class Schema {
         return `${this.project.getName()}.${this.getName()}`;
     }
 }
-exports.Schema = Schema;
-class Project {
+export class Project {
     constructor(name, schemas) {
         this.name = name;
         this.schemas = schemas;
@@ -61,5 +55,4 @@ class Project {
         return this.name;
     }
 }
-exports.Project = Project;
 //# sourceMappingURL=Resources.js.map
