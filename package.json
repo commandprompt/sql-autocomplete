@@ -5,7 +5,6 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "postinstall": "npm run build",
     "build": "tsc --build --clean && tsc",
     "test": "npx jest"
   },
@@ -32,7 +31,7 @@
   "homepage": "https://modeldba.com/sql-autocomplete",
   "dependencies": {
     "antlr4-c3": "^1.1.15",
-    "antlr4ts-sql": "git://github.com/commandprompt/antlr4ts-sql.git#cd5bab6a72aa2da791e59d85a5252df260bc70eb"
+    "antlr4ts-sql": "git://github.com/commandprompt/antlr4ts-sql.git#ceac51378cd064db2f140c3fc554323606006af1"
   },
   "devDependencies": {
     "@types/jest": "^26.0.20",
