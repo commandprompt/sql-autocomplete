@@ -3,12 +3,10 @@ import { SQLAutocomplete, SQLDialect, AutocompleteOption, AutocompleteOptionType
 let mysqlAutocomplete: SQLAutocomplete = null;
 let plsqlAutocomplete: SQLAutocomplete = null;
 let plpgsqlAutocomplete: SQLAutocomplete = null;
-let tsqlAutocomplete: SQLAutocomplete = null;
 beforeAll(() => {
   mysqlAutocomplete = new SQLAutocomplete(SQLDialect.MYSQL);
   plsqlAutocomplete = new SQLAutocomplete(SQLDialect.PLSQL);
   plpgsqlAutocomplete = new SQLAutocomplete(SQLDialect.PLpgSQL);
-  tsqlAutocomplete = new SQLAutocomplete(SQLDialect.TSQL);
 });
 
 function containsOptionType(options: AutocompleteOption[], type: AutocompleteOptionType): boolean {
@@ -83,10 +81,6 @@ test("autocomplete constructor options", () => {
 
 test("autocomplete detects table location", () => {
   const sql = "SELECT * FROM t";
-  const tsqlOptions = tsqlAutocomplete.autocomplete(sql, sql.length);
-  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
-  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.COLUMN)).toBeFalsy();
-  expect(allKeywordsBeginWith(tsqlOptions, "t")).toBeTruthy();
   const mysqlOptions = mysqlAutocomplete.autocomplete(sql, sql.length);
   expect(containsOptionType(mysqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
   expect(containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)).toBeFalsy();
@@ -103,10 +97,6 @@ test("autocomplete detects table location", () => {
 
 test("autocomplete detects column location", () => {
   const sql = "SELECT * FROM table1 WHERE c";
-  const tsqlOptions = tsqlAutocomplete.autocomplete(sql, sql.length);
-  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
-  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.COLUMN)).toBeTruthy();
-  expect(allKeywordsBeginWith(tsqlOptions, "c")).toBeTruthy();
   const mysqlOptions = mysqlAutocomplete.autocomplete(sql, sql.length);
   expect(containsOptionType(mysqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
   expect(containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)).toBeTruthy();
@@ -123,9 +113,6 @@ test("autocomplete detects column location", () => {
 
 test("autocomplete next word", () => {
   const sql = "SELECT ";
-  const tsqlOptions = tsqlAutocomplete.autocomplete(sql);
-  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
-  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.COLUMN)).toBeTruthy();
   const mysqlOptions = mysqlAutocomplete.autocomplete(sql);
   expect(containsOptionType(mysqlOptions, AutocompleteOptionType.TABLE)).toBeTruthy();
   expect(containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)).toBeTruthy();
@@ -139,10 +126,6 @@ test("autocomplete next word", () => {
 
 test("autocomplete when position is not provided", () => {
   const sql = "SELECT * FR";
-  const tsqlOptions = tsqlAutocomplete.autocomplete(sql);
-  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.TABLE)).toBeFalsy();
-  expect(containsOptionType(tsqlOptions, AutocompleteOptionType.COLUMN)).toBeFalsy();
-  expect(allKeywordsBeginWith(tsqlOptions, "FR")).toBeTruthy();
   const mysqlOptions = mysqlAutocomplete.autocomplete(sql);
   expect(containsOptionType(mysqlOptions, AutocompleteOptionType.TABLE)).toBeFalsy();
   expect(containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)).toBeFalsy();

@@ -8,7 +8,6 @@ import {
   PlSQLGrammar,
   SQLDialect,
   Token,
-  TSQLGrammar,
 } from "antlr4ts-sql";
 import { CodeCompletionCore } from "antlr4-c3";
 import { AutocompleteOption } from "./models/AutocompleteOption";
@@ -177,9 +176,7 @@ export class SQLAutocomplete {
   }
 
   _tokenizeWhitespace() {
-    if (this.dialect === SQLDialect.TSQL) {
-      return false; // TSQL grammar SKIPs whitespace
-    } else if (this.dialect === SQLDialect.PLSQL) {
+    if (this.dialect === SQLDialect.PLSQL) {
       return true;
     } else if (this.dialect === SQLDialect.PLpgSQL) {
       return true;
@@ -198,14 +195,7 @@ export class SQLAutocomplete {
   }
 
   _getPreferredRulesForTable(): number[] {
-    if (this.dialect === SQLDialect.TSQL) {
-      return [
-        TSQLGrammar.TSqlParser.RULE_table_name,
-        TSQLGrammar.TSqlParser.RULE_table_name_with_hint,
-        TSQLGrammar.TSqlParser.RULE_full_table_name,
-        TSQLGrammar.TSqlParser.RULE_table_source,
-      ];
-    } else if (this.dialect === SQLDialect.MYSQL) {
+    if (this.dialect === SQLDialect.MYSQL) {
       return [
         MySQLGrammar.MultiQueryMySQLParser.RULE_tableRef,
         MySQLGrammar.MultiQueryMySQLParser.RULE_fieldIdentifier,
@@ -222,15 +212,7 @@ export class SQLAutocomplete {
   }
 
   _getPreferredRulesForColumn(): number[] {
-    if (this.dialect === SQLDialect.TSQL) {
-      return [
-        TSQLGrammar.TSqlParser.RULE_column_elem,
-        TSQLGrammar.TSqlParser.RULE_column_alias,
-        TSQLGrammar.TSqlParser.RULE_full_column_name,
-        TSQLGrammar.TSqlParser.RULE_output_column_name,
-        TSQLGrammar.TSqlParser.RULE_column_declaration,
-      ];
-    } else if (this.dialect === SQLDialect.MYSQL) {
+    if (this.dialect === SQLDialect.MYSQL) {
       return [MySQLGrammar.MultiQueryMySQLParser.RULE_columnRef];
     } else if (this.dialect === SQLDialect.PLSQL) {
       return [PlSQLGrammar.PlSqlParser.RULE_column_name, PlSQLGrammar.PlSqlParser.RULE_general_element];
@@ -244,15 +226,7 @@ export class SQLAutocomplete {
   }
 
   _getTokensToIgnore(): number[] {
-    if (this.dialect === SQLDialect.TSQL) {
-      return [
-        TSQLGrammar.TSqlParser.DOT,
-        TSQLGrammar.TSqlParser.COMMA,
-        TSQLGrammar.TSqlParser.ID,
-        TSQLGrammar.TSqlParser.LR_BRACKET,
-        TSQLGrammar.TSqlParser.RR_BRACKET,
-      ];
-    } else if (this.dialect === SQLDialect.MYSQL) {
+    if (this.dialect === SQLDialect.MYSQL) {
       return [
         MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
         MySQLGrammar.MultiQueryMySQLParser.COMMA_SYMBOL,
