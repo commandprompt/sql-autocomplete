@@ -8,6 +8,7 @@ import {
   PlSQLGrammar,
   SQLDialect,
   Token,
+  SQLiteGrammar,
 } from "antlr4ts-sql";
 import { CodeCompletionCore } from "antlr4-c3";
 import { AutocompleteOption } from "./models/AutocompleteOption";
@@ -207,6 +208,9 @@ export class SQLAutocomplete {
         PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name,
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
       ];
+    } 
+    else if (this.dialect === SQLDialect.SQLITE) {
+      return [SQLiteGrammar.SQLiteParser.RULE_table_name, SQLiteGrammar.SQLiteParser.RULE_schema_name];
     }
     return [];
   }
@@ -221,6 +225,8 @@ export class SQLAutocomplete {
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_identifier,
       ];
+    } else if (this.dialect === SQLDialect.SQLITE) {
+      return [SQLiteGrammar.SQLiteParser.RULE_column_name, SQLiteGrammar.SQLiteParser.RULE_column_alias];
     }
     return [];
   }
@@ -258,6 +264,15 @@ export class SQLAutocomplete {
         PLpgSQLGrammar.PLpgSQLParser.RIGHT_PAREN,
         PLpgSQLGrammar.PLpgSQLParser.LEFT_BRACKET,
         PLpgSQLGrammar.PLpgSQLParser.RIGHT_BRACKET,
+      ];
+    } else if (this.dialect === SQLDialect.SQLITE) {
+      return [
+        SQLiteGrammar.SQLiteParser.DOT,
+        SQLiteGrammar.SQLiteParser.COMMA,
+        SQLiteGrammar.SQLiteParser.SCOL,
+        SQLiteGrammar.SQLiteParser.IDENTIFIER,
+        SQLiteGrammar.SQLiteParser.OPEN_PAR,
+        SQLiteGrammar.SQLiteParser.CLOSE_PAR,
       ];
     }
     return [];

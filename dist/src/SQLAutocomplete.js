@@ -184,6 +184,9 @@ class SQLAutocomplete {
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
             ];
         }
+        else if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
+            return [antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_table_name, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_schema_name];
+        }
         return [];
     }
     _getPreferredRulesForColumn() {
@@ -198,6 +201,9 @@ class SQLAutocomplete {
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_identifier,
             ];
+        }
+        else if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
+            return [antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_column_name, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_column_alias];
         }
         return [];
     }
@@ -236,6 +242,16 @@ class SQLAutocomplete {
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RIGHT_PAREN,
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.LEFT_BRACKET,
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RIGHT_BRACKET,
+            ];
+        }
+        else if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
+            return [
+                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.DOT,
+                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.COMMA,
+                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.SCOL,
+                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.IDENTIFIER,
+                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.OPEN_PAR,
+                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.CLOSE_PAR,
             ];
         }
         return [];
