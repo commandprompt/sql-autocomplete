@@ -1,4 +1,4 @@
-src/
+/src/
 test/
 jest.config.js
 index.ts
