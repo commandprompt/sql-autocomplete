@@ -7,9 +7,10 @@ const AutocompleteOption_1 = require("./models/AutocompleteOption");
 const AutocompleteOptionType_1 = require("./models/AutocompleteOptionType");
 const SimpleSQLTokenizer_1 = require("./models/SimpleSQLTokenizer");
 class SQLAutocomplete {
-    constructor(dialect, tableNames, columnNames) {
+    constructor(dialect, tableNames, columnNames, viewNames) {
         this.tableNames = [];
         this.columnNames = [];
+        this.viewNames = [];
         this.dialect = dialect;
         this.antlr4tssql = new antlr4ts_sql_1.antlr4tsSQL(this.dialect);
         if (tableNames !== null && tableNames !== undefined) {
@@ -17,6 +18,9 @@ class SQLAutocomplete {
         }
         if (columnNames !== null && columnNames !== undefined) {
             this.columnNames.push(...columnNames);
+        }
+        if (viewNames !== null && viewNames !== undefined) {
+            this.viewNames.push(...viewNames);
         }
     }
     autocomplete(sqlScript, atIndex) {
@@ -32,11 +36,13 @@ class SQLAutocomplete {
         const preferredRulesSchema = this._getPreferredRulesForSchema();
         const preferredRulesTable = this._getPreferredRulesForTable();
         const preferredRulesColumn = this._getPreferredRulesForColumn();
+        const preferredRulesView = this._getPreferredRulesForView();
         const preferredRuleOptions = [
             preferredRulesProject,
             preferredRulesSchema,
             preferredRulesTable,
             preferredRulesColumn,
+            preferredRulesView,
         ];
         const ignoreTokens = this._getTokensToIgnore();
         core.ignoredTokens = new Set(ignoreTokens);
@@ -61,6 +67,7 @@ class SQLAutocomplete {
         let isSchemaCandidatePosition = false;
         let isTableCandidatePosition = false;
         let isColumnCandidatePosition = false;
+        let isViewCandidatePosition = false;
         for (const preferredRules of preferredRuleOptions) {
             core.preferredRules = new Set(preferredRules);
             // core.showResult = true;
@@ -105,6 +112,9 @@ class SQLAutocomplete {
                 if (preferredRulesColumn.includes(rule[0])) {
                     isColumnCandidatePosition = true;
                 }
+                if (preferredRulesView.includes(rule[0])) {
+                    isViewCandidatePosition = true;
+                }
             }
         }
         if (isTableCandidatePosition) {
@@ -127,6 +137,17 @@ class SQLAutocomplete {
             if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.COLUMN) {
                 // If none of the column options match, still identify this as a potential column location
                 autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(null, AutocompleteOptionType_1.AutocompleteOptionType.COLUMN));
+            }
+        }
+        if (isViewCandidatePosition) {
+            for (const viewName of this.viewNames) {
+                if (viewName.toUpperCase().startsWith(tokenString.toUpperCase())) {
+                    autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(viewName, AutocompleteOptionType_1.AutocompleteOptionType.VIEW));
+                }
+            }
+            if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.VIEW) {
+                // If none of the view options match, still identify this as a potential view location
+                autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(null, AutocompleteOptionType_1.AutocompleteOptionType.VIEW));
             }
         }
         return autocompleteOptions;
@@ -204,6 +225,12 @@ class SQLAutocomplete {
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
             return [antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_column_name, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_column_alias];
+        }
+        return [];
+    }
+    _getPreferredRulesForView() {
+        if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
+            return [antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_create_view_stmt, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_view_name];
         }
         return [];
     }

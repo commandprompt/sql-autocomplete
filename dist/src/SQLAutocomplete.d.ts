@@ -5,7 +5,8 @@ export declare class SQLAutocomplete {
     antlr4tssql: antlr4tsSQL;
     tableNames: string[];
     columnNames: string[];
-    constructor(dialect: SQLDialect, tableNames?: string[], columnNames?: string[]);
+    viewNames: string[];
+    constructor(dialect: SQLDialect, tableNames?: string[], columnNames?: string[], viewNames?: string[]);
     autocomplete(sqlScript: string, atIndex?: number): AutocompleteOption[];
     setTableNames(tableNames: string[]): void;
     setColumnNames(columnNames: string[]): void;
@@ -16,6 +17,7 @@ export declare class SQLAutocomplete {
     _getPreferredRulesForSchema(): number[];
     _getPreferredRulesForTable(): number[];
     _getPreferredRulesForColumn(): number[];
+    _getPreferredRulesForView(): number[];
     _getTokensToIgnore(): number[];
     _getTokenIndexAt(tokens: any[], fullString: string, offset: number): number;
     _getTokenString(token: any, fullString: string, offset: number): string;

@@ -3,5 +3,6 @@ export declare enum AutocompleteOptionType {
     COLUMN = "COLUMN",
     PROJECT = "PROJECT",
     TABLE = "TABLE",
-    SCHEMA = "SCHEMA"
+    SCHEMA = "SCHEMA",
+    VIEW = "VIEW"
 }
