@@ -257,7 +257,9 @@ export class SQLAutocomplete {
 
   _getPreferredRulesForView(): number[] {
     if (this.dialect === SQLDialect.SQLITE) {
-      return [SQLiteGrammar.SQLiteParser.RULE_create_view_stmt, SQLiteGrammar.SQLiteParser.RULE_view_name];
+      return [SQLiteGrammar.SQLiteParser.RULE_create_view_stmt, SQLiteGrammar.SQLiteParser.RULE_view_name,
+        SQLiteGrammar.SQLiteParser.RULE_drop_stmt, SQLiteGrammar.SQLiteParser.RULE_select_stmt
+      ];
     }
     return [];
   }

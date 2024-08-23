@@ -230,7 +230,9 @@ class SQLAutocomplete {
     }
     _getPreferredRulesForView() {
         if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
-            return [antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_create_view_stmt, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_view_name];
+            return [antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_create_view_stmt, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_view_name,
+                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_drop_stmt, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_select_stmt
+            ];
         }
         return [];
     }
