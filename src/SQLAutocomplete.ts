@@ -20,8 +20,9 @@ export class SQLAutocomplete {
   antlr4tssql: antlr4tsSQL;
   tableNames: string[] = [];
   columnNames: string[] = [];
+  viewNames: string[] = [];
 
-  constructor(dialect: SQLDialect, tableNames?: string[], columnNames?: string[]) {
+  constructor(dialect: SQLDialect, tableNames?: string[], columnNames?: string[], viewNames?: string[]) {
     this.dialect = dialect;
     this.antlr4tssql = new antlr4tsSQL(this.dialect);
     if (tableNames !== null && tableNames !== undefined) {
@@ -29,6 +30,10 @@ export class SQLAutocomplete {
     }
     if (columnNames !== null && columnNames !== undefined) {
       this.columnNames.push(...columnNames);
+    }
+
+    if (viewNames !== null && viewNames !== undefined) {
+      this.viewNames.push(...viewNames);
     }
   }
 
@@ -45,11 +50,13 @@ export class SQLAutocomplete {
     const preferredRulesSchema = this._getPreferredRulesForSchema();
     const preferredRulesTable = this._getPreferredRulesForTable();
     const preferredRulesColumn = this._getPreferredRulesForColumn();
+    const preferredRulesView = this._getPreferredRulesForView();
     const preferredRuleOptions = [
       preferredRulesProject,
       preferredRulesSchema,
       preferredRulesTable,
       preferredRulesColumn,
+      preferredRulesView,
     ];
     const ignoreTokens = this._getTokensToIgnore();
     core.ignoredTokens = new Set(ignoreTokens);
@@ -78,6 +85,7 @@ export class SQLAutocomplete {
     let isSchemaCandidatePosition = false;
     let isTableCandidatePosition = false;
     let isColumnCandidatePosition = false;
+    let isViewCandidatePosition = false;
     for (const preferredRules of preferredRuleOptions) {
       core.preferredRules = new Set(preferredRules);
       // core.showResult = true;
@@ -124,6 +132,9 @@ export class SQLAutocomplete {
         if (preferredRulesColumn.includes(rule[0])) {
           isColumnCandidatePosition = true;
         }
+        if (preferredRulesView.includes(rule[0])) {
+          isViewCandidatePosition = true;
+        }
       }
     }
 
@@ -147,6 +158,19 @@ export class SQLAutocomplete {
       if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType.COLUMN) {
         // If none of the column options match, still identify this as a potential column location
         autocompleteOptions.unshift(new AutocompleteOption(null, AutocompleteOptionType.COLUMN));
+      }
+    }
+
+    if (isViewCandidatePosition) {
+      for (const viewName of this.viewNames) {
+        if (viewName.toUpperCase().startsWith(tokenString.toUpperCase())) {
+          autocompleteOptions.unshift(new AutocompleteOption(viewName, AutocompleteOptionType.VIEW))
+        }
+      }
+
+      if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType.VIEW) {
+        // If none of the view options match, still identify this as a potential view location
+        autocompleteOptions.unshift(new AutocompleteOption(null, AutocompleteOptionType.VIEW));
       }
     }
 
@@ -227,6 +251,13 @@ export class SQLAutocomplete {
       ];
     } else if (this.dialect === SQLDialect.SQLITE) {
       return [SQLiteGrammar.SQLiteParser.RULE_column_name, SQLiteGrammar.SQLiteParser.RULE_column_alias];
+    }
+    return [];
+  }
+
+  _getPreferredRulesForView(): number[] {
+    if (this.dialect === SQLDialect.SQLITE) {
+      return [SQLiteGrammar.SQLiteParser.RULE_create_view_stmt, SQLiteGrammar.SQLiteParser.RULE_view_name];
     }
     return [];
   }
