@@ -185,7 +185,7 @@ class SQLAutocomplete {
             ];
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
-            return [antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_table_name, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_schema_name];
+            return [antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_table_name];
         }
         return [];
     }

@@ -210,7 +210,7 @@ export class SQLAutocomplete {
       ];
     } 
     else if (this.dialect === SQLDialect.SQLITE) {
-      return [SQLiteGrammar.SQLiteParser.RULE_table_name, SQLiteGrammar.SQLiteParser.RULE_schema_name];
+      return [SQLiteGrammar.SQLiteParser.RULE_table_name];
     }
     return [];
   }
