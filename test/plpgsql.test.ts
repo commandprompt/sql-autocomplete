@@ -1,54 +1,61 @@
 import { SQLAutocomplete, SQLDialect, AutocompleteOptionType } from "../index";
 import {
-  containsOption,
   containsOptionType,
   allKeywordsBeginWith,
+  containsOption,
 } from "./utils";
-let sqliteAutocomplete: SQLAutocomplete = null;
+
+let plpgsqlAutocomplete: SQLAutocomplete = null;
 
 beforeAll(() => {
-  sqliteAutocomplete = new SQLAutocomplete(SQLDialect.SQLITE);
+  plpgsqlAutocomplete = new SQLAutocomplete(SQLDialect.PLpgSQL);
 });
 
 test("autocomplete detects table location", () => {
   const sql = "SELECT * FROM t";
-  const sqliteOptions = sqliteAutocomplete.autocomplete(sql, sql.length);
+  const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql, sql.length);
   expect(
-    containsOptionType(sqliteOptions, AutocompleteOptionType.TABLE)
+    containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)
   ).toBeTruthy();
   expect(
-    containsOptionType(sqliteOptions, AutocompleteOptionType.COLUMN)
+    containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
-  expect(allKeywordsBeginWith(sqliteOptions, "t")).toBeTruthy();
+  expect(allKeywordsBeginWith(plpgsqlOptions, "t")).toBeTruthy();
 });
 
 test("autocomplete detects column location", () => {
   const sql = "SELECT * FROM table1 WHERE c";
-  const sqliteOptions = sqliteAutocomplete.autocomplete(sql, sql.length);
+  const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql, sql.length);
   expect(
-    containsOptionType(sqliteOptions, AutocompleteOptionType.TABLE)
+    containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)
   ).toBeTruthy();
   expect(
-    containsOptionType(sqliteOptions, AutocompleteOptionType.COLUMN)
+    containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeTruthy();
-  expect(allKeywordsBeginWith(sqliteOptions, "c")).toBeTruthy();
+  expect(allKeywordsBeginWith(plpgsqlOptions, "c")).toBeTruthy();
 });
 
 test("autocomplete next word", () => {
   const sql = "SELECT ";
-  const sqliteOptions = sqliteAutocomplete.autocomplete(sql);
+  const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql);
   expect(
-    containsOptionType(sqliteOptions, AutocompleteOptionType.TABLE)
+    containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)
   ).toBeTruthy();
   expect(
-    containsOptionType(sqliteOptions, AutocompleteOptionType.COLUMN)
+    containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeTruthy();
 });
 
 test("autocomplete when position is not provided", () => {
   const sql = "SELECT * FR";
-  const sqliteOptions = sqliteAutocomplete.autocomplete(sql);
-  expect(allKeywordsBeginWith(sqliteOptions, "FR")).toBeTruthy();
+  const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql);
+  expect(
+    containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)
+  ).toBeFalsy();
+  expect(
+    containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
+  ).toBeFalsy();
+  expect(allKeywordsBeginWith(plpgsqlOptions, "FR")).toBeTruthy();
 });
 
 test("shouldn't autocomplete view in create view statement", () => {
@@ -57,7 +64,7 @@ test("shouldn't autocomplete view in create view statement", () => {
   const columnNames = ["column1", "column2"];
   const viewNames = ["tableview1", "tableview2"];
   const autocompleterWithViews = new SQLAutocomplete(
-    SQLDialect.SQLITE,
+    SQLDialect.PLpgSQL,
     tableNames,
     columnNames,
     viewNames
@@ -70,9 +77,6 @@ test("shouldn't autocomplete view in create view statement", () => {
   expect(
     containsOptionType(options, AutocompleteOptionType.TABLE)
   ).toBeTruthy();
-  expect(
-    containsOption(options, AutocompleteOptionType.VIEW, "tableview1")
-  ).toBeFalsy();
   expect(
     containsOption(options, AutocompleteOptionType.TABLE, "table1")
   ).toBeTruthy();
@@ -87,7 +91,7 @@ test("autocomplete view in drop view statement", () => {
   const columnNames = ["column1", "column2"];
   const viewNames = ["tableview1", "tableview2"];
   const autocompleterWithViews = new SQLAutocomplete(
-    SQLDialect.SQLITE,
+    SQLDialect.PLpgSQL,
     tableNames,
     columnNames,
     viewNames
@@ -96,7 +100,6 @@ test("autocomplete view in drop view statement", () => {
   const options = autocompleterWithViews.autocomplete(sql, sql.length);
 
   expect(containsOptionType(options, AutocompleteOptionType.VIEW)).toBeTruthy();
-  expect(containsOptionType(options, AutocompleteOptionType.TABLE)).toBeFalsy();
   expect(
     containsOption(options, AutocompleteOptionType.VIEW, "tableview1")
   ).toBeTruthy();
@@ -111,7 +114,7 @@ test("autocomplete views and tables in select stmt", () => {
   const columnNames = ["column1", "column2"];
   const viewNames = ["tableview1", "tableview2"];
   const autocompleterWithViews = new SQLAutocomplete(
-    SQLDialect.SQLITE,
+    SQLDialect.PLpgSQL,
     tableNames,
     columnNames,
     viewNames

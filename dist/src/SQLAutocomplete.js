@@ -206,7 +206,7 @@ class SQLAutocomplete {
             ];
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
-            return [antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_table_name];
+            return [antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_table_name, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_create_view_stmt,];
         }
         return [];
     }
@@ -230,8 +230,15 @@ class SQLAutocomplete {
     }
     _getPreferredRulesForView() {
         if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
-            return [antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_create_view_stmt, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_view_name,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_drop_stmt, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_select_stmt
+            return [
+                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_drop_stmt, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_select_stmt,
+            ];
+        }
+        else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLpgSQL) {
+            return [
+                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_alter_view_statement,
+                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_alter_owner, antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_drop_statements,
+                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_select_stmt,
             ];
         }
         return [];

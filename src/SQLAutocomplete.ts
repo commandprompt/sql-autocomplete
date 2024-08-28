@@ -234,7 +234,7 @@ export class SQLAutocomplete {
       ];
     } 
     else if (this.dialect === SQLDialect.SQLITE) {
-      return [SQLiteGrammar.SQLiteParser.RULE_table_name];
+      return [SQLiteGrammar.SQLiteParser.RULE_table_name, SQLiteGrammar.SQLiteParser.RULE_create_view_stmt,];
     }
     return [];
   }
@@ -257,8 +257,14 @@ export class SQLAutocomplete {
 
   _getPreferredRulesForView(): number[] {
     if (this.dialect === SQLDialect.SQLITE) {
-      return [SQLiteGrammar.SQLiteParser.RULE_create_view_stmt, SQLiteGrammar.SQLiteParser.RULE_view_name,
-        SQLiteGrammar.SQLiteParser.RULE_drop_stmt, SQLiteGrammar.SQLiteParser.RULE_select_stmt
+      return [
+        SQLiteGrammar.SQLiteParser.RULE_drop_stmt, SQLiteGrammar.SQLiteParser.RULE_select_stmt,
+      ];
+    } else if (this.dialect === SQLDialect.PLpgSQL) {
+      return [
+        PLpgSQLGrammar.PLpgSQLParser.RULE_alter_view_statement,
+        PLpgSQLGrammar.PLpgSQLParser.RULE_alter_owner, PLpgSQLGrammar.PLpgSQLParser.RULE_drop_statements,
+        PLpgSQLGrammar.PLpgSQLParser.RULE_select_stmt,
       ];
     }
     return [];
