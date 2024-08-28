@@ -291,6 +291,7 @@ export class SQLAutocomplete {
       return [
         MySQLGrammar.MultiQueryMySQLParser.RULE_tableRef,
         MySQLGrammar.MultiQueryMySQLParser.RULE_fieldIdentifier,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_createView,
       ];
     } else if (this.dialect === SQLDialect.PLSQL) {
       return [
@@ -345,6 +346,18 @@ export class SQLAutocomplete {
         PLpgSQLGrammar.PLpgSQLParser.RULE_alter_owner,
         PLpgSQLGrammar.PLpgSQLParser.RULE_drop_statements,
         PLpgSQLGrammar.PLpgSQLParser.RULE_select_stmt,
+      ];
+    } else if (this.dialect === SQLDialect.MYSQL) {
+      return [
+        MySQLGrammar.MultiQueryMySQLParser.RULE_dropView,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_alterView,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_showStatement,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_selectStatement,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_updateStatement,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_insertStatement,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_deleteStatement,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_renameTableStatement,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_alterView,
       ];
     }
     return [];

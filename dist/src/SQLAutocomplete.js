@@ -201,6 +201,7 @@ class SQLAutocomplete {
             return [
                 antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_tableRef,
                 antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_fieldIdentifier,
+                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_createView,
             ];
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLSQL) {
@@ -260,6 +261,19 @@ class SQLAutocomplete {
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_alter_owner,
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_drop_statements,
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_select_stmt,
+            ];
+        }
+        else if (this.dialect === antlr4ts_sql_1.SQLDialect.MYSQL) {
+            return [
+                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_dropView,
+                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_alterView,
+                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_showStatement,
+                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_selectStatement,
+                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_updateStatement,
+                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_insertStatement,
+                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_deleteStatement,
+                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_renameTableStatement,
+                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_alterView,
             ];
         }
         return [];
