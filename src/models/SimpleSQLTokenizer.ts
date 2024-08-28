@@ -34,10 +34,7 @@ export class SimpleSQLTokenizer implements TokenSource {
     "\u2029",
   ];
 
-  constructor(
-    value: string,
-    tokenizeWhitespace: boolean,
-  ) {
+  constructor(value: string, tokenizeWhitespace: boolean) {
     this.value = value;
     this._currentIndex = 0;
     this._insideQuote = false;

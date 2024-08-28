@@ -76,19 +76,23 @@ class SQLAutocomplete {
             const candidates = core.collectCandidates(tokenIndex);
             for (const candidateToken of candidates.tokens) {
                 let candidateTokenValue = parser.vocabulary.getDisplayName(candidateToken[0]);
-                if (this.dialect === antlr4ts_sql_1.SQLDialect.MYSQL && candidateTokenValue.endsWith("_SYMBOL")) {
+                if (this.dialect === antlr4ts_sql_1.SQLDialect.MYSQL &&
+                    candidateTokenValue.endsWith("_SYMBOL")) {
                     candidateTokenValue = candidateTokenValue.substring(0, candidateTokenValue.length - 7);
                 }
-                if (candidateTokenValue.startsWith("'") && candidateTokenValue.endsWith("'")) {
+                if (candidateTokenValue.startsWith("'") &&
+                    candidateTokenValue.endsWith("'")) {
                     candidateTokenValue = candidateTokenValue.substring(1, candidateTokenValue.length - 1);
                 }
                 let followOnTokens = candidateToken[1];
                 for (const followOnToken of followOnTokens) {
                     let followOnTokenValue = parser.vocabulary.getDisplayName(followOnToken);
-                    if (followOnTokenValue.startsWith("'") && followOnTokenValue.endsWith("'")) {
+                    if (followOnTokenValue.startsWith("'") &&
+                        followOnTokenValue.endsWith("'")) {
                         followOnTokenValue = followOnTokenValue.substring(1, followOnTokenValue.length - 1);
                     }
-                    if (!(followOnTokenValue.length === 1 && /[^\w\s]/.test(followOnTokenValue))) {
+                    if (!(followOnTokenValue.length === 1 &&
+                        /[^\w\s]/.test(followOnTokenValue))) {
                         candidateTokenValue += " ";
                     }
                     candidateTokenValue += followOnTokenValue;
@@ -123,7 +127,8 @@ class SQLAutocomplete {
                     autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(tableName, AutocompleteOptionType_1.AutocompleteOptionType.TABLE));
                 }
             }
-            if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.TABLE) {
+            if (autocompleteOptions.length === 0 ||
+                autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.TABLE) {
                 // If none of the table options match, still identify this as a potential table location
                 autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(null, AutocompleteOptionType_1.AutocompleteOptionType.TABLE));
             }
@@ -134,7 +139,8 @@ class SQLAutocomplete {
                     autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(columnName, AutocompleteOptionType_1.AutocompleteOptionType.COLUMN));
                 }
             }
-            if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.COLUMN) {
+            if (autocompleteOptions.length === 0 ||
+                autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.COLUMN) {
                 // If none of the column options match, still identify this as a potential column location
                 autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(null, AutocompleteOptionType_1.AutocompleteOptionType.COLUMN));
             }
@@ -145,7 +151,8 @@ class SQLAutocomplete {
                     autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(viewName, AutocompleteOptionType_1.AutocompleteOptionType.VIEW));
                 }
             }
-            if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.VIEW) {
+            if (autocompleteOptions.length === 0 ||
+                autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.VIEW) {
                 // If none of the view options match, still identify this as a potential view location
                 autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(null, AutocompleteOptionType_1.AutocompleteOptionType.VIEW));
             }
@@ -197,7 +204,10 @@ class SQLAutocomplete {
             ];
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLSQL) {
-            return [antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_tableview_name, antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_table_element];
+            return [
+                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_tableview_name,
+                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_table_element,
+            ];
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLpgSQL) {
             return [
@@ -206,7 +216,10 @@ class SQLAutocomplete {
             ];
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
-            return [antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_table_name, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_create_view_stmt,];
+            return [
+                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_table_name,
+                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_create_view_stmt,
+            ];
         }
         return [];
     }
@@ -215,7 +228,10 @@ class SQLAutocomplete {
             return [antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_columnRef];
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLSQL) {
-            return [antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_column_name, antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_general_element];
+            return [
+                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_column_name,
+                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_general_element,
+            ];
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLpgSQL) {
             return [
@@ -224,20 +240,25 @@ class SQLAutocomplete {
             ];
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
-            return [antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_column_name, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_column_alias];
+            return [
+                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_column_name,
+                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_column_alias,
+            ];
         }
         return [];
     }
     _getPreferredRulesForView() {
         if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
             return [
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_drop_stmt, antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_select_stmt,
+                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_drop_stmt,
+                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_select_stmt,
             ];
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLpgSQL) {
             return [
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_alter_view_statement,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_alter_owner, antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_drop_statements,
+                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_alter_owner,
+                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_drop_statements,
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_select_stmt,
             ];
         }

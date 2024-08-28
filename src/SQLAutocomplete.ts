@@ -22,7 +22,12 @@ export class SQLAutocomplete {
   columnNames: string[] = [];
   viewNames: string[] = [];
 
-  constructor(dialect: SQLDialect, tableNames?: string[], columnNames?: string[], viewNames?: string[]) {
+  constructor(
+    dialect: SQLDialect,
+    tableNames?: string[],
+    columnNames?: string[],
+    viewNames?: string[]
+  ) {
     this.dialect = dialect;
     this.antlr4tssql = new antlr4tsSQL(this.dialect);
     if (tableNames !== null && tableNames !== undefined) {
@@ -69,12 +74,20 @@ export class SQLAutocomplete {
       this._tokenizeWhitespace()
     );
     const allTokens = new CommonTokenStream(simpleSQLTokenizer);
-    const tokenIndex = this._getTokenIndexAt(allTokens.getTokens(), sqlScript, indexToAutocomplete);
+    const tokenIndex = this._getTokenIndexAt(
+      allTokens.getTokens(),
+      sqlScript,
+      indexToAutocomplete
+    );
     if (tokenIndex === null) {
       return null;
     }
     const token: any = allTokens.getTokens()[tokenIndex];
-    const tokenString = this._getTokenString(token, sqlScript, indexToAutocomplete);
+    const tokenString = this._getTokenString(
+      token,
+      sqlScript,
+      indexToAutocomplete
+    );
     tokens.fill(); // Needed for CoreCompletionCore to process correctly, see: https://github.com/mike-lischke/antlr4-c3/issues/42
 
     const autocompleteOptions: AutocompleteOption[] = [];
@@ -93,20 +106,46 @@ export class SQLAutocomplete {
       // core.showRuleStack = true;
       const candidates = core.collectCandidates(tokenIndex);
       for (const candidateToken of candidates.tokens) {
-        let candidateTokenValue = parser.vocabulary.getDisplayName(candidateToken[0]);
-        if (this.dialect === SQLDialect.MYSQL && candidateTokenValue.endsWith("_SYMBOL")) {
-          candidateTokenValue = candidateTokenValue.substring(0, candidateTokenValue.length - 7);
+        let candidateTokenValue = parser.vocabulary.getDisplayName(
+          candidateToken[0]
+        );
+        if (
+          this.dialect === SQLDialect.MYSQL &&
+          candidateTokenValue.endsWith("_SYMBOL")
+        ) {
+          candidateTokenValue = candidateTokenValue.substring(
+            0,
+            candidateTokenValue.length - 7
+          );
         }
-        if (candidateTokenValue.startsWith("'") && candidateTokenValue.endsWith("'")) {
-          candidateTokenValue = candidateTokenValue.substring(1, candidateTokenValue.length - 1);
+        if (
+          candidateTokenValue.startsWith("'") &&
+          candidateTokenValue.endsWith("'")
+        ) {
+          candidateTokenValue = candidateTokenValue.substring(
+            1,
+            candidateTokenValue.length - 1
+          );
         }
         let followOnTokens = candidateToken[1];
         for (const followOnToken of followOnTokens) {
-          let followOnTokenValue = parser.vocabulary.getDisplayName(followOnToken);
-          if (followOnTokenValue.startsWith("'") && followOnTokenValue.endsWith("'")) {
-            followOnTokenValue = followOnTokenValue.substring(1, followOnTokenValue.length - 1);
+          let followOnTokenValue =
+            parser.vocabulary.getDisplayName(followOnToken);
+          if (
+            followOnTokenValue.startsWith("'") &&
+            followOnTokenValue.endsWith("'")
+          ) {
+            followOnTokenValue = followOnTokenValue.substring(
+              1,
+              followOnTokenValue.length - 1
+            );
           }
-          if (!(followOnTokenValue.length === 1 && /[^\w\s]/.test(followOnTokenValue))) {
+          if (
+            !(
+              followOnTokenValue.length === 1 &&
+              /[^\w\s]/.test(followOnTokenValue)
+            )
+          ) {
             candidateTokenValue += " ";
           }
           candidateTokenValue += followOnTokenValue;
@@ -114,9 +153,16 @@ export class SQLAutocomplete {
         if (
           tokenString.length === 0 ||
           (candidateTokenValue.startsWith(tokenString.toUpperCase()) &&
-            autocompleteOptions.find((option) => option.value === candidateTokenValue) === undefined)
+            autocompleteOptions.find(
+              (option) => option.value === candidateTokenValue
+            ) === undefined)
         ) {
-          autocompleteOptions.push(new AutocompleteOption(candidateTokenValue, AutocompleteOptionType.KEYWORD));
+          autocompleteOptions.push(
+            new AutocompleteOption(
+              candidateTokenValue,
+              AutocompleteOptionType.KEYWORD
+            )
+          );
         }
       }
       for (const rule of candidates.rules) {
@@ -141,36 +187,57 @@ export class SQLAutocomplete {
     if (isTableCandidatePosition) {
       for (const tableName of this.tableNames) {
         if (tableName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-          autocompleteOptions.unshift(new AutocompleteOption(tableName, AutocompleteOptionType.TABLE));
+          autocompleteOptions.unshift(
+            new AutocompleteOption(tableName, AutocompleteOptionType.TABLE)
+          );
         }
       }
-      if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType.TABLE) {
+      if (
+        autocompleteOptions.length === 0 ||
+        autocompleteOptions[0].optionType !== AutocompleteOptionType.TABLE
+      ) {
         // If none of the table options match, still identify this as a potential table location
-        autocompleteOptions.unshift(new AutocompleteOption(null, AutocompleteOptionType.TABLE));
+        autocompleteOptions.unshift(
+          new AutocompleteOption(null, AutocompleteOptionType.TABLE)
+        );
       }
     }
     if (isColumnCandidatePosition) {
       for (const columnName of this.columnNames) {
         if (columnName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-          autocompleteOptions.unshift(new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN));
+          autocompleteOptions.unshift(
+            new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN)
+          );
         }
       }
-      if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType.COLUMN) {
+      if (
+        autocompleteOptions.length === 0 ||
+        autocompleteOptions[0].optionType !== AutocompleteOptionType.COLUMN
+      ) {
         // If none of the column options match, still identify this as a potential column location
-        autocompleteOptions.unshift(new AutocompleteOption(null, AutocompleteOptionType.COLUMN));
+        autocompleteOptions.unshift(
+          new AutocompleteOption(null, AutocompleteOptionType.COLUMN)
+        );
       }
     }
 
     if (isViewCandidatePosition) {
       for (const viewName of this.viewNames) {
         if (viewName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-          autocompleteOptions.unshift(new AutocompleteOption(viewName, AutocompleteOptionType.VIEW))
+          autocompleteOptions.unshift(
+            new AutocompleteOption(viewName, AutocompleteOptionType.VIEW)
+          );
         }
       }
 
-      if (autocompleteOptions.length === 0 || autocompleteOptions[0].optionType !== AutocompleteOptionType.VIEW) {
+      if (
+        autocompleteOptions.length === 0 ||
+        autocompleteOptions[0].optionType !== AutocompleteOptionType.VIEW
+      ) {
         // If none of the view options match, still identify this as a potential view location
-        autocompleteOptions.unshift(new AutocompleteOption(null, AutocompleteOptionType.VIEW));
+        autocompleteOptions.unshift(
+          new AutocompleteOption(null, AutocompleteOptionType.VIEW)
+        );
       }
     }
 
@@ -226,15 +293,20 @@ export class SQLAutocomplete {
         MySQLGrammar.MultiQueryMySQLParser.RULE_fieldIdentifier,
       ];
     } else if (this.dialect === SQLDialect.PLSQL) {
-      return [PlSQLGrammar.PlSqlParser.RULE_tableview_name, PlSQLGrammar.PlSqlParser.RULE_table_element];
+      return [
+        PlSQLGrammar.PlSqlParser.RULE_tableview_name,
+        PlSQLGrammar.PlSqlParser.RULE_table_element,
+      ];
     } else if (this.dialect === SQLDialect.PLpgSQL) {
       return [
         PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name,
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
       ];
-    } 
-    else if (this.dialect === SQLDialect.SQLITE) {
-      return [SQLiteGrammar.SQLiteParser.RULE_table_name, SQLiteGrammar.SQLiteParser.RULE_create_view_stmt,];
+    } else if (this.dialect === SQLDialect.SQLITE) {
+      return [
+        SQLiteGrammar.SQLiteParser.RULE_table_name,
+        SQLiteGrammar.SQLiteParser.RULE_create_view_stmt,
+      ];
     }
     return [];
   }
@@ -243,14 +315,20 @@ export class SQLAutocomplete {
     if (this.dialect === SQLDialect.MYSQL) {
       return [MySQLGrammar.MultiQueryMySQLParser.RULE_columnRef];
     } else if (this.dialect === SQLDialect.PLSQL) {
-      return [PlSQLGrammar.PlSqlParser.RULE_column_name, PlSQLGrammar.PlSqlParser.RULE_general_element];
+      return [
+        PlSQLGrammar.PlSqlParser.RULE_column_name,
+        PlSQLGrammar.PlSqlParser.RULE_general_element,
+      ];
     } else if (this.dialect === SQLDialect.PLpgSQL) {
       return [
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
         PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_identifier,
       ];
     } else if (this.dialect === SQLDialect.SQLITE) {
-      return [SQLiteGrammar.SQLiteParser.RULE_column_name, SQLiteGrammar.SQLiteParser.RULE_column_alias];
+      return [
+        SQLiteGrammar.SQLiteParser.RULE_column_name,
+        SQLiteGrammar.SQLiteParser.RULE_column_alias,
+      ];
     }
     return [];
   }
@@ -258,12 +336,14 @@ export class SQLAutocomplete {
   _getPreferredRulesForView(): number[] {
     if (this.dialect === SQLDialect.SQLITE) {
       return [
-        SQLiteGrammar.SQLiteParser.RULE_drop_stmt, SQLiteGrammar.SQLiteParser.RULE_select_stmt,
+        SQLiteGrammar.SQLiteParser.RULE_drop_stmt,
+        SQLiteGrammar.SQLiteParser.RULE_select_stmt,
       ];
     } else if (this.dialect === SQLDialect.PLpgSQL) {
       return [
         PLpgSQLGrammar.PLpgSQLParser.RULE_alter_view_statement,
-        PLpgSQLGrammar.PLpgSQLParser.RULE_alter_owner, PLpgSQLGrammar.PLpgSQLParser.RULE_drop_statements,
+        PLpgSQLGrammar.PLpgSQLParser.RULE_alter_owner,
+        PLpgSQLGrammar.PLpgSQLParser.RULE_drop_statements,
         PLpgSQLGrammar.PLpgSQLParser.RULE_select_stmt,
       ];
     }
