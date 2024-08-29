@@ -4,13 +4,12 @@ import {
   containsOption,
   containsOptionType,
   allKeywordsBeginWith,
-} from "./utils";
+} from "./utils/utils";
 
 let mysqlAutocomplete: SQLAutocomplete = null;
-let plsqlAutocomplete: SQLAutocomplete = null;
+
 beforeAll(() => {
   mysqlAutocomplete = new SQLAutocomplete(SQLDialect.MYSQL);
-  plsqlAutocomplete = new SQLAutocomplete(SQLDialect.PLSQL);
 });
 
 test("autocomplete constructor options", () => {
@@ -113,14 +112,6 @@ test("autocomplete detects table location", () => {
     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
   expect(allKeywordsBeginWith(mysqlOptions, "t")).toBeTruthy();
-  const plsqlOptions = plsqlAutocomplete.autocomplete(sql, sql.length);
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)
-  ).toBeTruthy();
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
-  ).toBeFalsy();
-  expect(allKeywordsBeginWith(plsqlOptions, "t")).toBeTruthy();
 });
 
 test("autocomplete detects column location", () => {
@@ -133,14 +124,6 @@ test("autocomplete detects column location", () => {
     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeTruthy();
   expect(allKeywordsBeginWith(mysqlOptions, "c")).toBeTruthy();
-  const plsqlOptions = plsqlAutocomplete.autocomplete(sql, sql.length);
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)
-  ).toBeTruthy();
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
-  ).toBeTruthy();
-  expect(allKeywordsBeginWith(plsqlOptions, "c")).toBeTruthy();
 });
 
 test("autocomplete next word", () => {
@@ -151,13 +134,6 @@ test("autocomplete next word", () => {
   ).toBeTruthy();
   expect(
     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
-  ).toBeTruthy();
-  const plsqlOptions = plsqlAutocomplete.autocomplete(sql);
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)
-  ).toBeTruthy();
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeTruthy();
 });
 
@@ -171,12 +147,4 @@ test("autocomplete when position is not provided", () => {
     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
   expect(allKeywordsBeginWith(mysqlOptions, "FR")).toBeTruthy();
-  const plsqlOptions = plsqlAutocomplete.autocomplete(sql);
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)
-  ).toBeFalsy();
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
-  ).toBeFalsy();
-  expect(allKeywordsBeginWith(plsqlOptions, "FR")).toBeTruthy();
 });

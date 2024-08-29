@@ -1,4 +1,4 @@
-import { AutocompleteOption, AutocompleteOptionType } from "../index";
+import { AutocompleteOption, AutocompleteOptionType } from "../../index";
 
 function containsOptionType(
   options: AutocompleteOption[],

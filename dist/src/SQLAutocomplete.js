@@ -276,6 +276,9 @@ class SQLAutocomplete {
                 antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_alterView,
             ];
         }
+        else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLSQL) {
+            return [antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_tableview_name];
+        }
         return [];
     }
     _getTokensToIgnore() {

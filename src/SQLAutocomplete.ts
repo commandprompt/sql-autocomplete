@@ -359,6 +359,8 @@ export class SQLAutocomplete {
         MySQLGrammar.MultiQueryMySQLParser.RULE_renameTableStatement,
         MySQLGrammar.MultiQueryMySQLParser.RULE_alterView,
       ];
+    } else if (this.dialect === SQLDialect.PLSQL) {
+      return [PlSQLGrammar.PlSqlParser.RULE_tableview_name];
     }
     return [];
   }
