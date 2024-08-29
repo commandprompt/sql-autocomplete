@@ -8,5 +8,6 @@ var AutocompleteOptionType;
     AutocompleteOptionType["PROJECT"] = "PROJECT";
     AutocompleteOptionType["TABLE"] = "TABLE";
     AutocompleteOptionType["SCHEMA"] = "SCHEMA";
+    AutocompleteOptionType["VIEW"] = "VIEW";
 })(AutocompleteOptionType = exports.AutocompleteOptionType || (exports.AutocompleteOptionType = {}));
 //# sourceMappingURL=AutocompleteOptionType.js.map

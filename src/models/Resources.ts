@@ -83,4 +83,3 @@ export class Project {
     return this.name;
   }
 }
-

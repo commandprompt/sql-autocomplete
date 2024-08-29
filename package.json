@@ -21,7 +21,8 @@
     "sqlserver",
     "oracle",
     "plpgsql",
-    "plsql"
+    "plsql",
+    "sqlite"
   ],
   "author": "modelDBA",
   "license": "MIT",

@@ -4,4 +4,5 @@ export enum AutocompleteOptionType {
   PROJECT = "PROJECT",
   TABLE = "TABLE",
   SCHEMA = "SCHEMA",
+  VIEW = "VIEW",
 }

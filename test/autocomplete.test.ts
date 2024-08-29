@@ -1,61 +1,16 @@
+import { SQLAutocomplete, SQLDialect, AutocompleteOptionType } from "../index";
+
 import {
-  SQLAutocomplete,
-  SQLDialect,
-  AutocompleteOption,
-  AutocompleteOptionType,
-} from "../index";
+  containsOption,
+  containsOptionType,
+  allKeywordsBeginWith,
+} from "./utils/utils";
 
 let mysqlAutocomplete: SQLAutocomplete = null;
-let plsqlAutocomplete: SQLAutocomplete = null;
-let plpgsqlAutocomplete: SQLAutocomplete = null;
-let sqliteAutocomplete: SQLAutocomplete = null;
+
 beforeAll(() => {
   mysqlAutocomplete = new SQLAutocomplete(SQLDialect.MYSQL);
-  plsqlAutocomplete = new SQLAutocomplete(SQLDialect.PLSQL);
-  plpgsqlAutocomplete = new SQLAutocomplete(SQLDialect.PLpgSQL);
-  sqliteAutocomplete = new SQLAutocomplete(SQLDialect.SQLITE);
 });
-
-function containsOptionType(
-  options: AutocompleteOption[],
-  type: AutocompleteOptionType
-): boolean {
-  for (const option of options) {
-    if (option.optionType === type) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function containsOption(
-  options: AutocompleteOption[],
-  type: AutocompleteOptionType,
-  value: string | null
-): boolean {
-  for (const option of options) {
-    if (option.optionType === type && option.value === value) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function allKeywordsBeginWith(
-  options: AutocompleteOption[],
-  value: string
-): boolean {
-  value = value.toUpperCase();
-  for (const option of options) {
-    if (
-      option.optionType === AutocompleteOptionType.KEYWORD &&
-      !option.value.startsWith(value)
-    ) {
-      return false;
-    }
-  }
-  return true;
-}
 
 test("autocomplete constructor options", () => {
   const autocompleterWithoutNames = new SQLAutocomplete(SQLDialect.MYSQL);
@@ -157,30 +112,6 @@ test("autocomplete detects table location", () => {
     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
   expect(allKeywordsBeginWith(mysqlOptions, "t")).toBeTruthy();
-  const plsqlOptions = plsqlAutocomplete.autocomplete(sql, sql.length);
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)
-  ).toBeTruthy();
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
-  ).toBeFalsy();
-  expect(allKeywordsBeginWith(plsqlOptions, "t")).toBeTruthy();
-  const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql, sql.length);
-  expect(
-    containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)
-  ).toBeTruthy();
-  expect(
-    containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
-  ).toBeFalsy();
-  expect(allKeywordsBeginWith(plpgsqlOptions, "t")).toBeTruthy();
-  const sqliteOptions = sqliteAutocomplete.autocomplete(sql, sql.length);
-  expect(
-    containsOptionType(sqliteOptions, AutocompleteOptionType.TABLE)
-  ).toBeTruthy();
-  expect(
-    containsOptionType(sqliteOptions, AutocompleteOptionType.COLUMN)
-  ).toBeFalsy();
-  expect(allKeywordsBeginWith(sqliteOptions, "t")).toBeTruthy();
 });
 
 test("autocomplete detects column location", () => {
@@ -193,30 +124,6 @@ test("autocomplete detects column location", () => {
     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeTruthy();
   expect(allKeywordsBeginWith(mysqlOptions, "c")).toBeTruthy();
-  const plsqlOptions = plsqlAutocomplete.autocomplete(sql, sql.length);
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)
-  ).toBeTruthy();
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
-  ).toBeTruthy();
-  expect(allKeywordsBeginWith(plsqlOptions, "c")).toBeTruthy();
-  const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql, sql.length);
-  expect(
-    containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)
-  ).toBeTruthy();
-  expect(
-    containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
-  ).toBeTruthy();
-  expect(allKeywordsBeginWith(plpgsqlOptions, "c")).toBeTruthy();
-  const sqliteOptions = sqliteAutocomplete.autocomplete(sql, sql.length);
-  expect(
-    containsOptionType(sqliteOptions, AutocompleteOptionType.TABLE)
-  ).toBeTruthy();
-  expect(
-    containsOptionType(sqliteOptions, AutocompleteOptionType.COLUMN)
-  ).toBeTruthy();
-  expect(allKeywordsBeginWith(sqliteOptions, "c")).toBeTruthy();
 });
 
 test("autocomplete next word", () => {
@@ -227,27 +134,6 @@ test("autocomplete next word", () => {
   ).toBeTruthy();
   expect(
     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
-  ).toBeTruthy();
-  const plsqlOptions = plsqlAutocomplete.autocomplete(sql);
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)
-  ).toBeTruthy();
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
-  ).toBeTruthy();
-  const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql);
-  expect(
-    containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)
-  ).toBeTruthy();
-  expect(
-    containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
-  ).toBeTruthy();
-  const sqliteOptions = sqliteAutocomplete.autocomplete(sql);
-  expect(
-    containsOptionType(sqliteOptions, AutocompleteOptionType.TABLE)
-  ).toBeTruthy();
-  expect(
-    containsOptionType(sqliteOptions, AutocompleteOptionType.COLUMN)
   ).toBeTruthy();
 });
 
@@ -261,28 +147,4 @@ test("autocomplete when position is not provided", () => {
     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
   expect(allKeywordsBeginWith(mysqlOptions, "FR")).toBeTruthy();
-  const plsqlOptions = plsqlAutocomplete.autocomplete(sql);
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.TABLE)
-  ).toBeFalsy();
-  expect(
-    containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
-  ).toBeFalsy();
-  expect(allKeywordsBeginWith(plsqlOptions, "FR")).toBeTruthy();
-  const plpgsqlOptions = plpgsqlAutocomplete.autocomplete(sql);
-  expect(
-    containsOptionType(plpgsqlOptions, AutocompleteOptionType.TABLE)
-  ).toBeFalsy();
-  expect(
-    containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
-  ).toBeFalsy();
-  expect(allKeywordsBeginWith(plpgsqlOptions, "FR")).toBeTruthy();
-  const sqliteOptions = sqliteAutocomplete.autocomplete(sql);
-  expect(
-    containsOptionType(sqliteOptions, AutocompleteOptionType.TABLE)
-  ).toBeFalsy();
-  expect(
-    containsOptionType(sqliteOptions, AutocompleteOptionType.COLUMN)
-  ).toBeFalsy();
-  expect(allKeywordsBeginWith(sqliteOptions, "FR")).toBeTruthy();
 });
