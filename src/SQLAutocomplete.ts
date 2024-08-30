@@ -14,6 +14,7 @@ import { CodeCompletionCore } from "antlr4-c3";
 import { AutocompleteOption } from "./models/AutocompleteOption";
 import { AutocompleteOptionType } from "./models/AutocompleteOptionType";
 import { SimpleSQLTokenizer } from "./models/SimpleSQLTokenizer";
+import distance from 'jaro-winkler'
 
 export class SQLAutocomplete {
   dialect: SQLDialect;
@@ -186,7 +187,7 @@ export class SQLAutocomplete {
 
     if (isTableCandidatePosition) {
       for (const tableName of this.tableNames) {
-        if (tableName.toUpperCase().startsWith(tokenString.toUpperCase())) {
+        if (distance(tableName, tokenString, {caseSensitive: false}) > 0.7) {
           autocompleteOptions.unshift(
             new AutocompleteOption(tableName, AutocompleteOptionType.TABLE)
           );
@@ -204,7 +205,7 @@ export class SQLAutocomplete {
     }
     if (isColumnCandidatePosition) {
       for (const columnName of this.columnNames) {
-        if (columnName.toUpperCase().startsWith(tokenString.toUpperCase())) {
+        if (distance(columnName, tokenString, {caseSensitive: false}) > 0.7){
           autocompleteOptions.unshift(
             new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN)
           );
@@ -223,7 +224,7 @@ export class SQLAutocomplete {
 
     if (isViewCandidatePosition) {
       for (const viewName of this.viewNames) {
-        if (viewName.toUpperCase().startsWith(tokenString.toUpperCase())) {
+        if (distance(viewName, tokenString, {caseSensitive: false}) > 0.7) {
           autocompleteOptions.unshift(
             new AutocompleteOption(viewName, AutocompleteOptionType.VIEW)
           );
