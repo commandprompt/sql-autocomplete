@@ -127,7 +127,8 @@ class SQLAutocomplete {
         }
         if (isTableCandidatePosition) {
             for (const tableName of this.tableNames) {
-                if ((0, jaro_winkler_1.default)(tableName, tokenString, { caseSensitive: false }) > 0.7) {
+                if (tableName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
+                    (0, jaro_winkler_1.default)(tableName, tokenString, { caseSensitive: false }) > 0.7) {
                     autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(tableName, AutocompleteOptionType_1.AutocompleteOptionType.TABLE));
                 }
             }
@@ -139,7 +140,8 @@ class SQLAutocomplete {
         }
         if (isColumnCandidatePosition) {
             for (const columnName of this.columnNames) {
-                if ((0, jaro_winkler_1.default)(columnName, tokenString, { caseSensitive: false }) > 0.7) {
+                if (columnName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
+                    (0, jaro_winkler_1.default)(columnName, tokenString, { caseSensitive: false }) > 0.7) {
                     autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(columnName, AutocompleteOptionType_1.AutocompleteOptionType.COLUMN));
                 }
             }
@@ -151,7 +153,8 @@ class SQLAutocomplete {
         }
         if (isViewCandidatePosition) {
             for (const viewName of this.viewNames) {
-                if ((0, jaro_winkler_1.default)(viewName, tokenString, { caseSensitive: false }) > 0.7) {
+                if (viewName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
+                    (0, jaro_winkler_1.default)(viewName, tokenString, { caseSensitive: false }) > 0.7) {
                     autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(viewName, AutocompleteOptionType_1.AutocompleteOptionType.VIEW));
                 }
             }
