@@ -187,14 +187,14 @@ export class SQLAutocomplete {
 
     if (isTableCandidatePosition) {
       for (const tableName of this.tableNames) {
-        if (
-          tableName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
-          distance(tableName, tokenString, { caseSensitive: false }) > 0.7
-        ) {
-          autocompleteOptions.unshift(
-            new AutocompleteOption(tableName, AutocompleteOptionType.TABLE)
-          );
-        }
+        // if (
+        //   tableName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
+        //   distance(tableName, tokenString, { caseSensitive: false }) > 0.7
+        // ) {
+        // }
+        autocompleteOptions.unshift(
+          new AutocompleteOption(tableName, AutocompleteOptionType.TABLE)
+        );
       }
       if (
         autocompleteOptions.length === 0 ||
@@ -208,14 +208,14 @@ export class SQLAutocomplete {
     }
     if (isColumnCandidatePosition) {
       for (const columnName of this.columnNames) {
-        if (
-          columnName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
-          distance(columnName, tokenString, { caseSensitive: false }) > 0.7
-        ) {
-          autocompleteOptions.unshift(
-            new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN)
-          );
-        }
+        // if (
+        //   columnName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
+        //   distance(columnName, tokenString, { caseSensitive: false }) > 0.7
+        // ) {
+        // }
+        autocompleteOptions.unshift(
+          new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN)
+        );
       }
       if (
         autocompleteOptions.length === 0 ||
@@ -230,14 +230,14 @@ export class SQLAutocomplete {
 
     if (isViewCandidatePosition) {
       for (const viewName of this.viewNames) {
-        if (
-          viewName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
-          distance(viewName, tokenString, { caseSensitive: false }) > 0.7
-        ) {
-          autocompleteOptions.unshift(
-            new AutocompleteOption(viewName, AutocompleteOptionType.VIEW)
-          );
-        }
+        // if (
+        //   viewName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
+        //   distance(viewName, tokenString, { caseSensitive: false }) > 0.7
+        // ) {
+        // }
+        autocompleteOptions.unshift(
+          new AutocompleteOption(viewName, AutocompleteOptionType.VIEW)
+        );
       }
 
       if (

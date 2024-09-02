@@ -1,7 +1,4 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SQLAutocomplete = void 0;
 const antlr4ts_sql_1 = require("antlr4ts-sql");
@@ -9,7 +6,6 @@ const antlr4_c3_1 = require("antlr4-c3");
 const AutocompleteOption_1 = require("./models/AutocompleteOption");
 const AutocompleteOptionType_1 = require("./models/AutocompleteOptionType");
 const SimpleSQLTokenizer_1 = require("./models/SimpleSQLTokenizer");
-const jaro_winkler_1 = __importDefault(require("jaro-winkler"));
 class SQLAutocomplete {
     constructor(dialect, tableNames, columnNames, viewNames) {
         this.tableNames = [];
@@ -127,10 +123,12 @@ class SQLAutocomplete {
         }
         if (isTableCandidatePosition) {
             for (const tableName of this.tableNames) {
-                if (tableName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
-                    (0, jaro_winkler_1.default)(tableName, tokenString, { caseSensitive: false }) > 0.7) {
-                    autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(tableName, AutocompleteOptionType_1.AutocompleteOptionType.TABLE));
-                }
+                // if (
+                //   tableName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
+                //   distance(tableName, tokenString, { caseSensitive: false }) > 0.7
+                // ) {
+                // }
+                autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(tableName, AutocompleteOptionType_1.AutocompleteOptionType.TABLE));
             }
             if (autocompleteOptions.length === 0 ||
                 autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.TABLE) {
@@ -140,10 +138,12 @@ class SQLAutocomplete {
         }
         if (isColumnCandidatePosition) {
             for (const columnName of this.columnNames) {
-                if (columnName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
-                    (0, jaro_winkler_1.default)(columnName, tokenString, { caseSensitive: false }) > 0.7) {
-                    autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(columnName, AutocompleteOptionType_1.AutocompleteOptionType.COLUMN));
-                }
+                // if (
+                //   columnName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
+                //   distance(columnName, tokenString, { caseSensitive: false }) > 0.7
+                // ) {
+                // }
+                autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(columnName, AutocompleteOptionType_1.AutocompleteOptionType.COLUMN));
             }
             if (autocompleteOptions.length === 0 ||
                 autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.COLUMN) {
@@ -153,10 +153,12 @@ class SQLAutocomplete {
         }
         if (isViewCandidatePosition) {
             for (const viewName of this.viewNames) {
-                if (viewName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
-                    (0, jaro_winkler_1.default)(viewName, tokenString, { caseSensitive: false }) > 0.7) {
-                    autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(viewName, AutocompleteOptionType_1.AutocompleteOptionType.VIEW));
-                }
+                // if (
+                //   viewName.toUpperCase().startsWith(tokenString.toUpperCase()) ||
+                //   distance(viewName, tokenString, { caseSensitive: false }) > 0.7
+                // ) {
+                // }
+                autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(viewName, AutocompleteOptionType_1.AutocompleteOptionType.VIEW));
             }
             if (autocompleteOptions.length === 0 ||
                 autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.VIEW) {
