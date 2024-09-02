@@ -1,9 +1,5 @@
 import { SQLAutocomplete, SQLDialect, AutocompleteOptionType } from "../index";
-import {
-  containsOption,
-  containsOptionType,
-  allKeywordsBeginWith,
-} from "./utils/utils";
+import { containsOption, containsOptionType } from "./utils/utils";
 import { tableNames, columnNames, viewNames } from "./utils/testData";
 let autocompleter: SQLAutocomplete;
 let autocompleterWithViews: SQLAutocomplete;
@@ -27,7 +23,6 @@ test("autocomplete detects table location", () => {
   expect(
     containsOptionType(sqliteOptions, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
-  expect(allKeywordsBeginWith(sqliteOptions, "t")).toBeTruthy();
 });
 
 test("autocomplete detects column location", () => {
@@ -39,7 +34,6 @@ test("autocomplete detects column location", () => {
   expect(
     containsOptionType(sqliteOptions, AutocompleteOptionType.COLUMN)
   ).toBeTruthy();
-  expect(allKeywordsBeginWith(sqliteOptions, "c")).toBeTruthy();
 });
 
 test("autocomplete next word", () => {
@@ -56,7 +50,9 @@ test("autocomplete next word", () => {
 test("autocomplete when position is not provided", () => {
   const sql = "SELECT * FR";
   const sqliteOptions = autocompleter.autocomplete(sql);
-  expect(allKeywordsBeginWith(sqliteOptions, "FR")).toBeTruthy();
+  expect(
+    containsOptionType(sqliteOptions, AutocompleteOptionType.KEYWORD)
+  ).toBeTruthy();
 });
 
 test("shouldn't autocomplete view in create view statement", () => {

@@ -98,8 +98,7 @@ class SQLAutocomplete {
                     candidateTokenValue += followOnTokenValue;
                 }
                 if (tokenString.length === 0 ||
-                    (candidateTokenValue.startsWith(tokenString.toUpperCase()) &&
-                        autocompleteOptions.find((option) => option.value === candidateTokenValue) === undefined)) {
+                    autocompleteOptions.find((option) => option.value === candidateTokenValue) === undefined) {
                     autocompleteOptions.push(new AutocompleteOption_1.AutocompleteOption(candidateTokenValue, AutocompleteOptionType_1.AutocompleteOptionType.KEYWORD));
                 }
             }
@@ -123,9 +122,7 @@ class SQLAutocomplete {
         }
         if (isTableCandidatePosition) {
             for (const tableName of this.tableNames) {
-                if (tableName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-                    autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(tableName, AutocompleteOptionType_1.AutocompleteOptionType.TABLE));
-                }
+                autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(tableName, AutocompleteOptionType_1.AutocompleteOptionType.TABLE));
             }
             if (autocompleteOptions.length === 0 ||
                 autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.TABLE) {
@@ -135,9 +132,7 @@ class SQLAutocomplete {
         }
         if (isColumnCandidatePosition) {
             for (const columnName of this.columnNames) {
-                if (columnName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-                    autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(columnName, AutocompleteOptionType_1.AutocompleteOptionType.COLUMN));
-                }
+                autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(columnName, AutocompleteOptionType_1.AutocompleteOptionType.COLUMN));
             }
             if (autocompleteOptions.length === 0 ||
                 autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.COLUMN) {
@@ -147,9 +142,7 @@ class SQLAutocomplete {
         }
         if (isViewCandidatePosition) {
             for (const viewName of this.viewNames) {
-                if (viewName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-                    autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(viewName, AutocompleteOptionType_1.AutocompleteOptionType.VIEW));
-                }
+                autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(viewName, AutocompleteOptionType_1.AutocompleteOptionType.VIEW));
             }
             if (autocompleteOptions.length === 0 ||
                 autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.VIEW) {

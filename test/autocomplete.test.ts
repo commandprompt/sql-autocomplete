@@ -1,12 +1,8 @@
 import { SQLAutocomplete, SQLDialect, AutocompleteOptionType } from "../index";
 
-import {
-  containsOption,
-  containsOptionType,
-  allKeywordsBeginWith,
-} from "./utils/utils";
+import { containsOption, containsOptionType } from "./utils/utils";
 
-let mysqlAutocomplete: SQLAutocomplete = null;
+let mysqlAutocomplete: SQLAutocomplete;
 
 beforeAll(() => {
   mysqlAutocomplete = new SQLAutocomplete(SQLDialect.MYSQL);
@@ -40,7 +36,6 @@ test("autocomplete constructor options", () => {
   expect(
     containsOptionType(options, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
-  expect(allKeywordsBeginWith(options, "t")).toBeTruthy();
 
   const options2 = autocompleterWithNames.autocomplete(
     sqlWithTable,
@@ -58,7 +53,6 @@ test("autocomplete constructor options", () => {
   expect(
     containsOptionType(options2, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
-  expect(allKeywordsBeginWith(options2, "t")).toBeTruthy();
 
   // Test for a table or column location
   const sqlWithColumn = "SELECT * FROM table1 WHERE c";
@@ -78,7 +72,6 @@ test("autocomplete constructor options", () => {
   expect(
     containsOption(options3, AutocompleteOptionType.COLUMN, null)
   ).toBeTruthy();
-  expect(allKeywordsBeginWith(options3, "c")).toBeTruthy();
 
   const options4 = autocompleterWithNames.autocomplete(
     sqlWithColumn,
@@ -89,9 +82,6 @@ test("autocomplete constructor options", () => {
   ).toBeTruthy();
   expect(
     containsOption(options4, AutocompleteOptionType.TABLE, "table1")
-  ).toBeFalsy();
-  expect(
-    containsOption(options4, AutocompleteOptionType.TABLE, null)
   ).toBeTruthy();
   expect(
     containsOptionType(options4, AutocompleteOptionType.COLUMN)
@@ -99,7 +89,6 @@ test("autocomplete constructor options", () => {
   expect(
     containsOption(options4, AutocompleteOptionType.COLUMN, "columnA")
   ).toBeTruthy();
-  expect(allKeywordsBeginWith(options4, "c")).toBeTruthy();
 });
 
 test("autocomplete detects table location", () => {
@@ -111,7 +100,6 @@ test("autocomplete detects table location", () => {
   expect(
     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
-  expect(allKeywordsBeginWith(mysqlOptions, "t")).toBeTruthy();
 });
 
 test("autocomplete detects column location", () => {
@@ -123,7 +111,6 @@ test("autocomplete detects column location", () => {
   expect(
     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeTruthy();
-  expect(allKeywordsBeginWith(mysqlOptions, "c")).toBeTruthy();
 });
 
 test("autocomplete next word", () => {
@@ -146,5 +133,4 @@ test("autocomplete when position is not provided", () => {
   expect(
     containsOptionType(mysqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
-  expect(allKeywordsBeginWith(mysqlOptions, "FR")).toBeTruthy();
 });

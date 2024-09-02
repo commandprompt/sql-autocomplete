@@ -1,9 +1,5 @@
 import { SQLAutocomplete, SQLDialect, AutocompleteOptionType } from "../index";
-import {
-  containsOptionType,
-  allKeywordsBeginWith,
-  containsOption,
-} from "./utils/utils";
+import { containsOptionType, containsOption } from "./utils/utils";
 import { tableNames, columnNames, viewNames } from "./utils/testData";
 
 let autocompleter: SQLAutocomplete;
@@ -28,7 +24,6 @@ test("autocomplete detects table location", () => {
   expect(
     containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
-  expect(allKeywordsBeginWith(plpgsqlOptions, "t")).toBeTruthy();
 });
 
 test("autocomplete detects column location", () => {
@@ -40,7 +35,6 @@ test("autocomplete detects column location", () => {
   expect(
     containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeTruthy();
-  expect(allKeywordsBeginWith(plpgsqlOptions, "c")).toBeTruthy();
 });
 
 test("autocomplete next word", () => {
@@ -63,7 +57,6 @@ test("autocomplete when position is not provided", () => {
   expect(
     containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
-  expect(allKeywordsBeginWith(plpgsqlOptions, "FR")).toBeTruthy();
 });
 
 test("shouldn't autocomplete view in create view statement", () => {

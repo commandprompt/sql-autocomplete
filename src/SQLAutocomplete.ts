@@ -152,10 +152,9 @@ export class SQLAutocomplete {
         }
         if (
           tokenString.length === 0 ||
-          (candidateTokenValue.startsWith(tokenString.toUpperCase()) &&
-            autocompleteOptions.find(
-              (option) => option.value === candidateTokenValue
-            ) === undefined)
+          autocompleteOptions.find(
+            (option) => option.value === candidateTokenValue
+          ) === undefined
         ) {
           autocompleteOptions.push(
             new AutocompleteOption(
@@ -186,11 +185,9 @@ export class SQLAutocomplete {
 
     if (isTableCandidatePosition) {
       for (const tableName of this.tableNames) {
-        if (tableName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-          autocompleteOptions.unshift(
-            new AutocompleteOption(tableName, AutocompleteOptionType.TABLE)
-          );
-        }
+        autocompleteOptions.unshift(
+          new AutocompleteOption(tableName, AutocompleteOptionType.TABLE)
+        );
       }
       if (
         autocompleteOptions.length === 0 ||
@@ -204,11 +201,9 @@ export class SQLAutocomplete {
     }
     if (isColumnCandidatePosition) {
       for (const columnName of this.columnNames) {
-        if (columnName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-          autocompleteOptions.unshift(
-            new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN)
-          );
-        }
+        autocompleteOptions.unshift(
+          new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN)
+        );
       }
       if (
         autocompleteOptions.length === 0 ||
@@ -223,11 +218,9 @@ export class SQLAutocomplete {
 
     if (isViewCandidatePosition) {
       for (const viewName of this.viewNames) {
-        if (viewName.toUpperCase().startsWith(tokenString.toUpperCase())) {
-          autocompleteOptions.unshift(
-            new AutocompleteOption(viewName, AutocompleteOptionType.VIEW)
-          );
-        }
+        autocompleteOptions.unshift(
+          new AutocompleteOption(viewName, AutocompleteOptionType.VIEW)
+        );
       }
 
       if (

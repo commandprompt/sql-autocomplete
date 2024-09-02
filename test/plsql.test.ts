@@ -1,10 +1,6 @@
 import { SQLAutocomplete, SQLDialect, AutocompleteOptionType } from "../index";
 
-import {
-  containsOption,
-  containsOptionType,
-  allKeywordsBeginWith,
-} from "./utils/utils";
+import { containsOption, containsOptionType } from "./utils/utils";
 import { tableNames, columnNames, viewNames } from "./utils/testData";
 
 let autocompleter: SQLAutocomplete;
@@ -29,7 +25,6 @@ test("autocomplete detects table location", () => {
   expect(
     containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
-  expect(allKeywordsBeginWith(plsqlOptions, "t")).toBeTruthy();
 });
 
 test("autocomplete detects column location", () => {
@@ -41,7 +36,6 @@ test("autocomplete detects column location", () => {
   expect(
     containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeTruthy();
-  expect(allKeywordsBeginWith(plsqlOptions, "c")).toBeTruthy();
 });
 
 test("autocomplete next word", () => {
@@ -64,7 +58,6 @@ test("autocomplete when position is not provided", () => {
   expect(
     containsOptionType(plsqlOptions, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
-  expect(allKeywordsBeginWith(plsqlOptions, "FR")).toBeTruthy();
 });
 
 test("autocomplete view in drop view statement", () => {
