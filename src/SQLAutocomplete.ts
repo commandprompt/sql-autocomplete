@@ -21,12 +21,14 @@ export class SQLAutocomplete {
   tableNames: string[] = [];
   columnNames: string[] = [];
   viewNames: string[] = [];
+  schemaNames: string[] = [];
 
   constructor(
     dialect: SQLDialect,
     tableNames?: string[],
     columnNames?: string[],
-    viewNames?: string[]
+    viewNames?: string[],
+    schemaNames?: string[]
   ) {
     this.dialect = dialect;
     this.antlr4tssql = new antlr4tsSQL(this.dialect);
@@ -40,6 +42,10 @@ export class SQLAutocomplete {
     if (viewNames !== null && viewNames !== undefined) {
       this.viewNames.push(...viewNames);
     }
+
+    if (schemaNames !== null && viewNames !== undefined) {
+      this.schemaNames.push(...schemaNames);
+    }
   }
 
   autocomplete(sqlScript: string, atIndex?: number): AutocompleteOption[] {
@@ -51,13 +57,11 @@ export class SQLAutocomplete {
     const tokens = this._getTokens(sqlScript);
     const parser = this._getParser(tokens);
     const core = new CodeCompletionCore(parser);
-    const preferredRulesProject = this._getPreferredRulesForProject();
     const preferredRulesSchema = this._getPreferredRulesForSchema();
     const preferredRulesTable = this._getPreferredRulesForTable();
     const preferredRulesColumn = this._getPreferredRulesForColumn();
     const preferredRulesView = this._getPreferredRulesForView();
     const preferredRuleOptions = [
-      preferredRulesProject,
       preferredRulesSchema,
       preferredRulesTable,
       preferredRulesColumn,
@@ -94,7 +98,6 @@ export class SQLAutocomplete {
     // Depending on the SQL grammar, we may not get both Tables and Column rules,
     // even if both are viable options for autocompletion
     // So, instead of using all preferredRules at once, we'll do them separate
-    let isProjectCandidatePosition = false;
     let isSchemaCandidatePosition = false;
     let isTableCandidatePosition = false;
     let isColumnCandidatePosition = false;
@@ -165,9 +168,6 @@ export class SQLAutocomplete {
         }
       }
       for (const rule of candidates.rules) {
-        if (preferredRulesProject.includes(rule[0])) {
-          isProjectCandidatePosition = true;
-        }
         if (preferredRulesSchema.includes(rule[0])) {
           isSchemaCandidatePosition = true;
         }
@@ -180,6 +180,23 @@ export class SQLAutocomplete {
         if (preferredRulesView.includes(rule[0])) {
           isViewCandidatePosition = true;
         }
+      }
+    }
+
+    if (isSchemaCandidatePosition) {
+      for (const schemaName of this.schemaNames) {
+        autocompleteOptions.unshift(
+          new AutocompleteOption(schemaName, AutocompleteOptionType.SCHEMA)
+        );
+      }
+      if (
+        autocompleteOptions.length === 0 ||
+        autocompleteOptions[0].optionType !== AutocompleteOptionType.SCHEMA
+      ) {
+        // If none of the schema options match, still identify this as a potential schema location
+        autocompleteOptions.unshift(
+          new AutocompleteOption(null, AutocompleteOptionType.SCHEMA)
+        );
       }
     }
 
@@ -271,11 +288,10 @@ export class SQLAutocomplete {
     return true;
   }
 
-  _getPreferredRulesForProject(): number[] {
-    return [];
-  }
-
   _getPreferredRulesForSchema(): number[] {
+    if (this.dialect === SQLDialect.PLpgSQL) {
+      return [PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name];
+    }
     return [];
   }
 

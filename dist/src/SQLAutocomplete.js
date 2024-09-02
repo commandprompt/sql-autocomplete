@@ -7,10 +7,11 @@ const AutocompleteOption_1 = require("./models/AutocompleteOption");
 const AutocompleteOptionType_1 = require("./models/AutocompleteOptionType");
 const SimpleSQLTokenizer_1 = require("./models/SimpleSQLTokenizer");
 class SQLAutocomplete {
-    constructor(dialect, tableNames, columnNames, viewNames) {
+    constructor(dialect, tableNames, columnNames, viewNames, schemaNames) {
         this.tableNames = [];
         this.columnNames = [];
         this.viewNames = [];
+        this.schemaNames = [];
         this.dialect = dialect;
         this.antlr4tssql = new antlr4ts_sql_1.antlr4tsSQL(this.dialect);
         if (tableNames !== null && tableNames !== undefined) {
@@ -22,6 +23,9 @@ class SQLAutocomplete {
         if (viewNames !== null && viewNames !== undefined) {
             this.viewNames.push(...viewNames);
         }
+        if (schemaNames !== null && viewNames !== undefined) {
+            this.schemaNames.push(...schemaNames);
+        }
     }
     autocomplete(sqlScript, atIndex) {
         if (atIndex !== undefined && atIndex !== null) {
@@ -32,13 +36,11 @@ class SQLAutocomplete {
         const tokens = this._getTokens(sqlScript);
         const parser = this._getParser(tokens);
         const core = new antlr4_c3_1.CodeCompletionCore(parser);
-        const preferredRulesProject = this._getPreferredRulesForProject();
         const preferredRulesSchema = this._getPreferredRulesForSchema();
         const preferredRulesTable = this._getPreferredRulesForTable();
         const preferredRulesColumn = this._getPreferredRulesForColumn();
         const preferredRulesView = this._getPreferredRulesForView();
         const preferredRuleOptions = [
-            preferredRulesProject,
             preferredRulesSchema,
             preferredRulesTable,
             preferredRulesColumn,
@@ -63,7 +65,6 @@ class SQLAutocomplete {
         // Depending on the SQL grammar, we may not get both Tables and Column rules,
         // even if both are viable options for autocompletion
         // So, instead of using all preferredRules at once, we'll do them separate
-        let isProjectCandidatePosition = false;
         let isSchemaCandidatePosition = false;
         let isTableCandidatePosition = false;
         let isColumnCandidatePosition = false;
@@ -103,9 +104,6 @@ class SQLAutocomplete {
                 }
             }
             for (const rule of candidates.rules) {
-                if (preferredRulesProject.includes(rule[0])) {
-                    isProjectCandidatePosition = true;
-                }
                 if (preferredRulesSchema.includes(rule[0])) {
                     isSchemaCandidatePosition = true;
                 }
@@ -118,6 +116,16 @@ class SQLAutocomplete {
                 if (preferredRulesView.includes(rule[0])) {
                     isViewCandidatePosition = true;
                 }
+            }
+        }
+        if (isSchemaCandidatePosition) {
+            for (const schemaName of this.schemaNames) {
+                autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(schemaName, AutocompleteOptionType_1.AutocompleteOptionType.SCHEMA));
+            }
+            if (autocompleteOptions.length === 0 ||
+                autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.SCHEMA) {
+                // If none of the schema options match, still identify this as a potential schema location
+                autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(null, AutocompleteOptionType_1.AutocompleteOptionType.SCHEMA));
             }
         }
         if (isTableCandidatePosition) {
@@ -183,10 +191,10 @@ class SQLAutocomplete {
         }
         return true;
     }
-    _getPreferredRulesForProject() {
-        return [];
-    }
     _getPreferredRulesForSchema() {
+        if (this.dialect === antlr4ts_sql_1.SQLDialect.PLpgSQL) {
+            return [antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name];
+        }
         return [];
     }
     _getPreferredRulesForTable() {
