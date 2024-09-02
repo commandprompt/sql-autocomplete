@@ -153,7 +153,9 @@ export class SQLAutocomplete {
         }
         if (
           tokenString.length === 0 ||
-          (candidateTokenValue.startsWith(tokenString.toUpperCase()) &&
+          (
+            // candidateTokenValue.startsWith(tokenString.toUpperCase())
+          //  &&
             autocompleteOptions.find(
               (option) => option.value === candidateTokenValue
             ) === undefined)

@@ -98,8 +98,10 @@ class SQLAutocomplete {
                     candidateTokenValue += followOnTokenValue;
                 }
                 if (tokenString.length === 0 ||
-                    (candidateTokenValue.startsWith(tokenString.toUpperCase()) &&
-                        autocompleteOptions.find((option) => option.value === candidateTokenValue) === undefined)) {
+                    (
+                    // candidateTokenValue.startsWith(tokenString.toUpperCase())
+                    //  &&
+                    autocompleteOptions.find((option) => option.value === candidateTokenValue) === undefined)) {
                     autocompleteOptions.push(new AutocompleteOption_1.AutocompleteOption(candidateTokenValue, AutocompleteOptionType_1.AutocompleteOptionType.KEYWORD));
                 }
             }
