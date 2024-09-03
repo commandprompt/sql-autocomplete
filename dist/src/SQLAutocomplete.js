@@ -196,7 +196,11 @@ class SQLAutocomplete {
             return [antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name];
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.MYSQL) {
-            return [antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_schemaRef];
+            return [
+                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_schemaRef,
+                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_tableRef,
+                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_fieldIdentifier,
+            ];
         }
         return [];
     }

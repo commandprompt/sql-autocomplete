@@ -292,7 +292,11 @@ export class SQLAutocomplete {
     if (this.dialect === SQLDialect.PLpgSQL) {
       return [PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name];
     } else if (this.dialect === SQLDialect.MYSQL) {
-      return [MySQLGrammar.MultiQueryMySQLParser.RULE_schemaRef];
+      return [
+        MySQLGrammar.MultiQueryMySQLParser.RULE_schemaRef,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_tableRef,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_fieldIdentifier,
+      ];
     }
     return [];
   }
