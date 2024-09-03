@@ -43,7 +43,7 @@ export class SQLAutocomplete {
       this.viewNames.push(...viewNames);
     }
 
-    if (schemaNames !== null && viewNames !== undefined) {
+    if (schemaNames !== null && schemaNames !== undefined) {
       this.schemaNames.push(...schemaNames);
     }
   }
@@ -291,6 +291,8 @@ export class SQLAutocomplete {
   _getPreferredRulesForSchema(): number[] {
     if (this.dialect === SQLDialect.PLpgSQL) {
       return [PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name];
+    } else if (this.dialect === SQLDialect.MYSQL) {
+      return [MySQLGrammar.MultiQueryMySQLParser.RULE_schemaRef];
     }
     return [];
   }
@@ -350,12 +352,7 @@ export class SQLAutocomplete {
         SQLiteGrammar.SQLiteParser.RULE_select_stmt,
       ];
     } else if (this.dialect === SQLDialect.PLpgSQL) {
-      return [
-        PLpgSQLGrammar.PLpgSQLParser.RULE_alter_view_statement,
-        PLpgSQLGrammar.PLpgSQLParser.RULE_alter_owner,
-        PLpgSQLGrammar.PLpgSQLParser.RULE_drop_statements,
-        PLpgSQLGrammar.PLpgSQLParser.RULE_select_stmt,
-      ];
+      return [PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name];
     } else if (this.dialect === SQLDialect.MYSQL) {
       return [
         MySQLGrammar.MultiQueryMySQLParser.RULE_dropView,

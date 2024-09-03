@@ -59,13 +59,13 @@ test("autocomplete when position is not provided", () => {
   ).toBeFalsy();
 });
 
-test("shouldn't autocomplete view in create view statement", () => {
+test("autocomplete view in create view statement", () => {
   const sql = "CREATE VIEW t";
   expect(autocompleterWithViews.viewNames.length).toBe(2);
 
   const options = autocompleterWithViews.autocomplete(sql, sql.length);
 
-  expect(containsOptionType(options, AutocompleteOptionType.VIEW)).toBeFalsy();
+  expect(containsOptionType(options, AutocompleteOptionType.VIEW)).toBeTruthy();
   expect(
     containsOptionType(options, AutocompleteOptionType.TABLE)
   ).toBeTruthy();
