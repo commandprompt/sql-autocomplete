@@ -23,7 +23,7 @@ class SQLAutocomplete {
         if (viewNames !== null && viewNames !== undefined) {
             this.viewNames.push(...viewNames);
         }
-        if (schemaNames !== null && viewNames !== undefined) {
+        if (schemaNames !== null && schemaNames !== undefined) {
             this.schemaNames.push(...schemaNames);
         }
     }
@@ -195,6 +195,9 @@ class SQLAutocomplete {
         if (this.dialect === antlr4ts_sql_1.SQLDialect.PLpgSQL) {
             return [antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name];
         }
+        else if (this.dialect === antlr4ts_sql_1.SQLDialect.MYSQL) {
+            return [antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_schemaRef];
+        }
         return [];
     }
     _getPreferredRulesForTable() {
@@ -257,12 +260,7 @@ class SQLAutocomplete {
             ];
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLpgSQL) {
-            return [
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_alter_view_statement,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_alter_owner,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_drop_statements,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_select_stmt,
-            ];
+            return [antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name];
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.MYSQL) {
             return [
