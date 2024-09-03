@@ -1,9 +1,15 @@
 import { SQLAutocomplete, SQLDialect, AutocompleteOptionType } from "../index";
 import { containsOptionType, containsOption } from "./utils/utils";
-import { tableNames, columnNames, viewNames } from "./utils/testData";
+import {
+  tableNames,
+  columnNames,
+  viewNames,
+  schemaNames,
+} from "./utils/testData";
 
 let autocompleter: SQLAutocomplete;
 let autocompleterWithViews: SQLAutocomplete;
+let fullAutocompleter: SQLAutocomplete;
 
 beforeAll(() => {
   autocompleter = new SQLAutocomplete(SQLDialect.PLpgSQL);
@@ -12,6 +18,13 @@ beforeAll(() => {
     tableNames,
     columnNames,
     viewNames
+  );
+  fullAutocompleter = new SQLAutocomplete(
+    SQLDialect.MYSQL,
+    tableNames,
+    columnNames,
+    viewNames,
+    schemaNames
   );
 });
 
@@ -116,6 +129,25 @@ test("autocomplete view in alter view statement", () => {
   expect(containsOptionType(options, AutocompleteOptionType.VIEW)).toBeTruthy();
   expect(
     containsOption(options, AutocompleteOptionType.VIEW, "tableview1")
+  ).toBeTruthy();
+  expect(
+    containsOptionType(options, AutocompleteOptionType.COLUMN)
+  ).toBeFalsy();
+});
+
+test("autocomplete schema in select statement", () => {
+  const sql = "SELECT * FROM s";
+
+  const options = fullAutocompleter.autocomplete(sql, sql.length);
+
+  expect(
+    containsOptionType(options, AutocompleteOptionType.SCHEMA)
+  ).toBeTruthy();
+  expect(
+    containsOption(options, AutocompleteOptionType.SCHEMA, "schema1")
+  ).toBeTruthy();
+  expect(
+    containsOption(options, AutocompleteOptionType.SCHEMA, "schema2")
   ).toBeTruthy();
   expect(
     containsOptionType(options, AutocompleteOptionType.COLUMN)
