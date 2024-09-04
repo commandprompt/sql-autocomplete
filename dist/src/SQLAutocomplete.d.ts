@@ -6,14 +6,14 @@ export declare class SQLAutocomplete {
     tableNames: string[];
     columnNames: string[];
     viewNames: string[];
-    constructor(dialect: SQLDialect, tableNames?: string[], columnNames?: string[], viewNames?: string[]);
+    schemaNames: string[];
+    constructor(dialect: SQLDialect, tableNames?: string[], columnNames?: string[], viewNames?: string[], schemaNames?: string[]);
     autocomplete(sqlScript: string, atIndex?: number): AutocompleteOption[];
     setTableNames(tableNames: string[]): void;
     setColumnNames(columnNames: string[]): void;
     _getTokens(sqlScript: string): CommonTokenStream;
     _getParser(tokens: CommonTokenStream): Parser;
     _tokenizeWhitespace(): boolean;
-    _getPreferredRulesForProject(): number[];
     _getPreferredRulesForSchema(): number[];
     _getPreferredRulesForTable(): number[];
     _getPreferredRulesForColumn(): number[];
