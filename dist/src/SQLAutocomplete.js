@@ -193,13 +193,12 @@ class SQLAutocomplete {
     }
     _getPreferredRulesForSchema() {
         if (this.dialect === antlr4ts_sql_1.SQLDialect.PLpgSQL) {
-            return [antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name];
+            return [antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_query_schema_name];
         }
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.MYSQL) {
             return [
                 antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_schemaRef,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_tableRef,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_fieldIdentifier,
+                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_schemaName,
             ];
         }
         return [];

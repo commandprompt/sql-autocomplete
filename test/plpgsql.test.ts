@@ -20,7 +20,7 @@ beforeAll(() => {
     viewNames
   );
   fullAutocompleter = new SQLAutocomplete(
-    SQLDialect.MYSQL,
+    SQLDialect.PLpgSQL,
     tableNames,
     columnNames,
     viewNames,
@@ -149,6 +149,24 @@ test("autocomplete schema in select statement", () => {
   expect(
     containsOption(options, AutocompleteOptionType.SCHEMA, "schema2")
   ).toBeTruthy();
+  expect(
+    containsOptionType(options, AutocompleteOptionType.COLUMN)
+  ).toBeFalsy();
+});
+test("shouldn't autocomplete schema twice", () => {
+  const sql = "SELECT * FROM schema1.s";
+
+  const options = fullAutocompleter.autocomplete(sql, sql.length);
+
+  expect(
+    containsOptionType(options, AutocompleteOptionType.SCHEMA)
+  ).toBeFalsy();
+  expect(
+    containsOption(options, AutocompleteOptionType.SCHEMA, "schema1")
+  ).toBeFalsy();
+  expect(
+    containsOption(options, AutocompleteOptionType.SCHEMA, "schema2")
+  ).toBeFalsy();
   expect(
     containsOptionType(options, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();

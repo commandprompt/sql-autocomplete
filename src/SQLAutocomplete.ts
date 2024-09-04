@@ -290,12 +290,11 @@ export class SQLAutocomplete {
 
   _getPreferredRulesForSchema(): number[] {
     if (this.dialect === SQLDialect.PLpgSQL) {
-      return [PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name];
+      return [PLpgSQLGrammar.PLpgSQLParser.RULE_query_schema_name];
     } else if (this.dialect === SQLDialect.MYSQL) {
       return [
         MySQLGrammar.MultiQueryMySQLParser.RULE_schemaRef,
-        MySQLGrammar.MultiQueryMySQLParser.RULE_tableRef,
-        MySQLGrammar.MultiQueryMySQLParser.RULE_fieldIdentifier,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_schemaName,
       ];
     }
     return [];
