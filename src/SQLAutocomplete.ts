@@ -14,38 +14,17 @@ import { CodeCompletionCore } from "antlr4-c3";
 import { AutocompleteOption } from "./models/AutocompleteOption";
 import { AutocompleteOptionType } from "./models/AutocompleteOptionType";
 import { SimpleSQLTokenizer } from "./models/SimpleSQLTokenizer";
+import { SchemaManager } from "./models/Resources";
 
 export class SQLAutocomplete {
   dialect: SQLDialect;
   antlr4tssql: antlr4tsSQL;
-  tableNames: string[] = [];
-  columnNames: string[] = [];
-  viewNames: string[] = [];
-  schemaNames: string[] = [];
+  schemaManager: SchemaManager;
 
-  constructor(
-    dialect: SQLDialect,
-    tableNames?: string[],
-    columnNames?: string[],
-    viewNames?: string[],
-    schemaNames?: string[]
-  ) {
+  constructor(dialect: SQLDialect, schemas: any[]) {
     this.dialect = dialect;
     this.antlr4tssql = new antlr4tsSQL(this.dialect);
-    if (tableNames !== null && tableNames !== undefined) {
-      this.tableNames.push(...tableNames);
-    }
-    if (columnNames !== null && columnNames !== undefined) {
-      this.columnNames.push(...columnNames);
-    }
-
-    if (viewNames !== null && viewNames !== undefined) {
-      this.viewNames.push(...viewNames);
-    }
-
-    if (schemaNames !== null && schemaNames !== undefined) {
-      this.schemaNames.push(...schemaNames);
-    }
+    this.schemaManager = new SchemaManager(schemas);
   }
 
   autocomplete(sqlScript: string, atIndex?: number): AutocompleteOption[] {
@@ -184,7 +163,8 @@ export class SQLAutocomplete {
     }
 
     if (isSchemaCandidatePosition) {
-      for (const schemaName of this.schemaNames) {
+      const schemas: string[] = this.schemaManager.getAllSchemaNames();
+      for (const schemaName of schemas) {
         autocompleteOptions.unshift(
           new AutocompleteOption(schemaName, AutocompleteOptionType.SCHEMA)
         );
@@ -201,7 +181,28 @@ export class SQLAutocomplete {
     }
 
     if (isTableCandidatePosition) {
-      for (const tableName of this.tableNames) {
+      let tables: string[] = this.schemaManager.getAllTableNames();
+      if ([SQLDialect.MYSQL, SQLDialect.PLpgSQL].includes(this.dialect)) {
+        const tokenList: Token[] = tokens.getTokens();
+        const previousToken: Token = tokenList[tokenIndex - 1];
+        const tokenBeforePrevious: Token = tokenList[tokenIndex - 2];
+
+        const isDotSymbol: boolean = [
+          MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
+          PLpgSQLGrammar.PLpgSQLParser.DOT,
+        ].includes(previousToken.type);
+        const isIdentifier: boolean = [
+          PLpgSQLGrammar.PLpgSQLParser.Identifier,
+          MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
+        ].includes(tokenBeforePrevious.type);
+        if (isDotSymbol && isIdentifier) {
+          tables = this.schemaManager.getTableNamesFromSchema(
+            tokenBeforePrevious.text
+          );
+        }
+      }
+
+      for (const tableName of tables) {
         autocompleteOptions.unshift(
           new AutocompleteOption(tableName, AutocompleteOptionType.TABLE)
         );
@@ -216,25 +217,30 @@ export class SQLAutocomplete {
         );
       }
     }
-    if (isColumnCandidatePosition) {
-      for (const columnName of this.columnNames) {
-        autocompleteOptions.unshift(
-          new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN)
-        );
-      }
-      if (
-        autocompleteOptions.length === 0 ||
-        autocompleteOptions[0].optionType !== AutocompleteOptionType.COLUMN
-      ) {
-        // If none of the column options match, still identify this as a potential column location
-        autocompleteOptions.unshift(
-          new AutocompleteOption(null, AutocompleteOptionType.COLUMN)
-        );
-      }
-    }
-
     if (isViewCandidatePosition) {
-      for (const viewName of this.viewNames) {
+      let views: string[] = this.schemaManager.getAllViewNames();
+
+      if ([SQLDialect.MYSQL, SQLDialect.PLpgSQL].includes(this.dialect)) {
+        const tokenList: Token[] = tokens.getTokens();
+        const previousToken: Token = tokenList[tokenIndex - 1];
+        const tokenBeforePrevious: Token = tokenList[tokenIndex - 2];
+
+        const isDotSymbol: boolean = [
+          MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
+          PLpgSQLGrammar.PLpgSQLParser.DOT,
+        ].includes(previousToken.type);
+        const isIdentifier: boolean = [
+          PLpgSQLGrammar.PLpgSQLParser.Identifier,
+          MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
+        ].includes(tokenBeforePrevious.type);
+        if (isDotSymbol && isIdentifier) {
+          views = this.schemaManager.getViewNamesFromSchema(
+            tokenBeforePrevious.text
+          );
+        }
+      }
+
+      for (const viewName of views) {
         autocompleteOptions.unshift(
           new AutocompleteOption(viewName, AutocompleteOptionType.VIEW)
         );
@@ -251,19 +257,26 @@ export class SQLAutocomplete {
       }
     }
 
+    if (isColumnCandidatePosition) {
+      //TODO implement columns suggestion based on schema or table
+      let columns: string[] = this.schemaManager.getAllColumns();
+      for (const columnName of columns) {
+        autocompleteOptions.unshift(
+          new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN)
+        );
+      }
+      if (
+        autocompleteOptions.length === 0 ||
+        autocompleteOptions[0].optionType !== AutocompleteOptionType.COLUMN
+      ) {
+        // If none of the column options match, still identify this as a potential column location
+        autocompleteOptions.unshift(
+          new AutocompleteOption(null, AutocompleteOptionType.COLUMN)
+        );
+      }
+    }
+
     return autocompleteOptions;
-  }
-
-  setTableNames(tableNames: string[]): void {
-    if (tableNames !== null && tableNames !== undefined) {
-      this.tableNames = [...tableNames];
-    }
-  }
-
-  setColumnNames(columnNames: string[]): void {
-    if (columnNames !== null && columnNames !== undefined) {
-      this.columnNames = [...columnNames];
-    }
   }
 
   _getTokens(sqlScript: string): CommonTokenStream {

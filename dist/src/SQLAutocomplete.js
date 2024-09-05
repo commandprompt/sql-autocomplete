@@ -6,26 +6,12 @@ const antlr4_c3_1 = require("antlr4-c3");
 const AutocompleteOption_1 = require("./models/AutocompleteOption");
 const AutocompleteOptionType_1 = require("./models/AutocompleteOptionType");
 const SimpleSQLTokenizer_1 = require("./models/SimpleSQLTokenizer");
+const Resources_1 = require("./models/Resources");
 class SQLAutocomplete {
-    constructor(dialect, tableNames, columnNames, viewNames, schemaNames) {
-        this.tableNames = [];
-        this.columnNames = [];
-        this.viewNames = [];
-        this.schemaNames = [];
+    constructor(dialect, schemas) {
         this.dialect = dialect;
         this.antlr4tssql = new antlr4ts_sql_1.antlr4tsSQL(this.dialect);
-        if (tableNames !== null && tableNames !== undefined) {
-            this.tableNames.push(...tableNames);
-        }
-        if (columnNames !== null && columnNames !== undefined) {
-            this.columnNames.push(...columnNames);
-        }
-        if (viewNames !== null && viewNames !== undefined) {
-            this.viewNames.push(...viewNames);
-        }
-        if (schemaNames !== null && schemaNames !== undefined) {
-            this.schemaNames.push(...schemaNames);
-        }
+        this.schemaManager = new Resources_1.SchemaManager(schemas);
     }
     autocomplete(sqlScript, atIndex) {
         if (atIndex !== undefined && atIndex !== null) {
@@ -119,7 +105,8 @@ class SQLAutocomplete {
             }
         }
         if (isSchemaCandidatePosition) {
-            for (const schemaName of this.schemaNames) {
+            const schemas = this.schemaManager.getAllSchemaNames();
+            for (const schemaName of schemas) {
                 autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(schemaName, AutocompleteOptionType_1.AutocompleteOptionType.SCHEMA));
             }
             if (autocompleteOptions.length === 0 ||
@@ -129,7 +116,24 @@ class SQLAutocomplete {
             }
         }
         if (isTableCandidatePosition) {
-            for (const tableName of this.tableNames) {
+            let tables = this.schemaManager.getAllTableNames();
+            if ([antlr4ts_sql_1.SQLDialect.MYSQL, antlr4ts_sql_1.SQLDialect.PLpgSQL].includes(this.dialect)) {
+                const tokenList = tokens.getTokens();
+                const previousToken = tokenList[tokenIndex - 1];
+                const tokenBeforePrevious = tokenList[tokenIndex - 2];
+                const isDotSymbol = [
+                    antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
+                    antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.DOT,
+                ].includes(previousToken.type);
+                const isIdentifier = [
+                    antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
+                    antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
+                ].includes(tokenBeforePrevious.type);
+                if (isDotSymbol && isIdentifier) {
+                    tables = this.schemaManager.getTableNamesFromSchema(tokenBeforePrevious.text);
+                }
+            }
+            for (const tableName of tables) {
                 autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(tableName, AutocompleteOptionType_1.AutocompleteOptionType.TABLE));
             }
             if (autocompleteOptions.length === 0 ||
@@ -138,18 +142,25 @@ class SQLAutocomplete {
                 autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(null, AutocompleteOptionType_1.AutocompleteOptionType.TABLE));
             }
         }
-        if (isColumnCandidatePosition) {
-            for (const columnName of this.columnNames) {
-                autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(columnName, AutocompleteOptionType_1.AutocompleteOptionType.COLUMN));
-            }
-            if (autocompleteOptions.length === 0 ||
-                autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.COLUMN) {
-                // If none of the column options match, still identify this as a potential column location
-                autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(null, AutocompleteOptionType_1.AutocompleteOptionType.COLUMN));
-            }
-        }
         if (isViewCandidatePosition) {
-            for (const viewName of this.viewNames) {
+            let views = this.schemaManager.getAllViewNames();
+            if ([antlr4ts_sql_1.SQLDialect.MYSQL, antlr4ts_sql_1.SQLDialect.PLpgSQL].includes(this.dialect)) {
+                const tokenList = tokens.getTokens();
+                const previousToken = tokenList[tokenIndex - 1];
+                const tokenBeforePrevious = tokenList[tokenIndex - 2];
+                const isDotSymbol = [
+                    antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
+                    antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.DOT,
+                ].includes(previousToken.type);
+                const isIdentifier = [
+                    antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
+                    antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
+                ].includes(tokenBeforePrevious.type);
+                if (isDotSymbol && isIdentifier) {
+                    views = this.schemaManager.getViewNamesFromSchema(tokenBeforePrevious.text);
+                }
+            }
+            for (const viewName of views) {
                 autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(viewName, AutocompleteOptionType_1.AutocompleteOptionType.VIEW));
             }
             if (autocompleteOptions.length === 0 ||
@@ -158,17 +169,19 @@ class SQLAutocomplete {
                 autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(null, AutocompleteOptionType_1.AutocompleteOptionType.VIEW));
             }
         }
+        if (isColumnCandidatePosition) {
+            //TODO implement columns suggestion based on schema or table
+            let columns = this.schemaManager.getAllColumns();
+            for (const columnName of columns) {
+                autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(columnName, AutocompleteOptionType_1.AutocompleteOptionType.COLUMN));
+            }
+            if (autocompleteOptions.length === 0 ||
+                autocompleteOptions[0].optionType !== AutocompleteOptionType_1.AutocompleteOptionType.COLUMN) {
+                // If none of the column options match, still identify this as a potential column location
+                autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(null, AutocompleteOptionType_1.AutocompleteOptionType.COLUMN));
+            }
+        }
         return autocompleteOptions;
-    }
-    setTableNames(tableNames) {
-        if (tableNames !== null && tableNames !== undefined) {
-            this.tableNames = [...tableNames];
-        }
-    }
-    setColumnNames(columnNames) {
-        if (columnNames !== null && columnNames !== undefined) {
-            this.columnNames = [...columnNames];
-        }
     }
     _getTokens(sqlScript) {
         const tokens = this.antlr4tssql.getTokens(sqlScript, []);

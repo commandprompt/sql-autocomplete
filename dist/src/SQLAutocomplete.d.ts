@@ -1,16 +1,12 @@
 import { antlr4tsSQL, CommonTokenStream, Parser, SQLDialect } from "antlr4ts-sql";
 import { AutocompleteOption } from "./models/AutocompleteOption";
+import { SchemaManager } from "./models/Resources";
 export declare class SQLAutocomplete {
     dialect: SQLDialect;
     antlr4tssql: antlr4tsSQL;
-    tableNames: string[];
-    columnNames: string[];
-    viewNames: string[];
-    schemaNames: string[];
-    constructor(dialect: SQLDialect, tableNames?: string[], columnNames?: string[], viewNames?: string[], schemaNames?: string[]);
+    schemaManager: SchemaManager;
+    constructor(dialect: SQLDialect, schemas: any[]);
     autocomplete(sqlScript: string, atIndex?: number): AutocompleteOption[];
-    setTableNames(tableNames: string[]): void;
-    setColumnNames(columnNames: string[]): void;
     _getTokens(sqlScript: string): CommonTokenStream;
     _getParser(tokens: CommonTokenStream): Parser;
     _tokenizeWhitespace(): boolean;
