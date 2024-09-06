@@ -1,5 +1,6 @@
 import { antlr4tsSQL, CommonTokenStream, Parser, SQLDialect } from "antlr4ts-sql";
 import { AutocompleteOption } from "./models/AutocompleteOption";
+import { AutocompleteOptionType } from "./models/AutocompleteOptionType";
 import { SchemaManager } from "./models/Resources";
 export declare class SQLAutocomplete {
     dialect: SQLDialect;
@@ -17,4 +18,7 @@ export declare class SQLAutocomplete {
     _getTokensToIgnore(): number[];
     _getTokenIndexAt(tokens: any[], fullString: string, offset: number): number;
     _getTokenString(token: any, fullString: string, offset: number): string;
+    _addTableSuggestions(autocompleteOptions: AutocompleteOption[], tokenIndex: number, tokens: CommonTokenStream): void;
+    _addViewSuggestions(autocompleteOptions: AutocompleteOption[], tokenIndex: number, tokens: CommonTokenStream): void;
+    _addPlaceholderIfEmpty(autocompleteOptions: AutocompleteOption[], optionType: AutocompleteOptionType): void;
 }
