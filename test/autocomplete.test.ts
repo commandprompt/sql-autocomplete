@@ -1,31 +1,20 @@
 import { SQLAutocomplete, SQLDialect, AutocompleteOptionType } from "../index";
 
 import { containsOption, containsOptionType } from "./utils/utils";
+import { schemas } from "./utils/testData";
 
 let mysqlAutocomplete: SQLAutocomplete;
 
 beforeAll(() => {
-  mysqlAutocomplete = new SQLAutocomplete(SQLDialect.MYSQL);
+  mysqlAutocomplete = new SQLAutocomplete(SQLDialect.MYSQL, schemas);
 });
 
 test("autocomplete constructor options", () => {
-  const autocompleterWithoutNames = new SQLAutocomplete(SQLDialect.MYSQL);
-  expect(autocompleterWithoutNames.tableNames.length).toBe(0);
-  expect(autocompleterWithoutNames.columnNames.length).toBe(0);
-
-  const autocompleterWithNames = new SQLAutocomplete(
-    SQLDialect.MYSQL,
-    ["table1"],
-    ["columnA"]
-  );
-  expect(autocompleterWithNames.tableNames.length).toBe(1);
-  expect(autocompleterWithNames.columnNames.length).toBe(1);
-
   // Test for a table location
-  const sqlWithTable = "SELECT * FROM t";
-  const options = autocompleterWithoutNames.autocomplete(
-    sqlWithTable,
-    sqlWithTable.length
+  const sqlWithoutTable = "SELECT * FROM schema3.t";
+  const options = mysqlAutocomplete.autocomplete(
+    sqlWithoutTable,
+    sqlWithoutTable.length
   );
   expect(
     containsOptionType(options, AutocompleteOptionType.TABLE)
@@ -37,7 +26,8 @@ test("autocomplete constructor options", () => {
     containsOptionType(options, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
 
-  const options2 = autocompleterWithNames.autocomplete(
+  const sqlWithTable = "SELECT * FROM schema1.t";
+  const options2 = mysqlAutocomplete.autocomplete(
     sqlWithTable,
     sqlWithTable.length
   );
@@ -48,7 +38,7 @@ test("autocomplete constructor options", () => {
     containsOption(options2, AutocompleteOptionType.TABLE, null)
   ).toBeFalsy();
   expect(
-    containsOption(options2, AutocompleteOptionType.TABLE, "table1")
+    containsOption(options2, AutocompleteOptionType.TABLE, "table1schema1")
   ).toBeTruthy();
   expect(
     containsOptionType(options2, AutocompleteOptionType.COLUMN)
@@ -56,7 +46,8 @@ test("autocomplete constructor options", () => {
 
   // Test for a table or column location
   const sqlWithColumn = "SELECT * FROM table1 WHERE c";
-  const options3 = autocompleterWithoutNames.autocomplete(
+
+  const options3 = mysqlAutocomplete.autocomplete(
     sqlWithColumn,
     sqlWithColumn.length
   );
@@ -64,30 +55,13 @@ test("autocomplete constructor options", () => {
     containsOptionType(options3, AutocompleteOptionType.TABLE)
   ).toBeTruthy();
   expect(
-    containsOption(options3, AutocompleteOptionType.TABLE, null)
+    containsOption(options3, AutocompleteOptionType.TABLE, "table1schema1")
   ).toBeTruthy();
   expect(
     containsOptionType(options3, AutocompleteOptionType.COLUMN)
   ).toBeTruthy();
   expect(
-    containsOption(options3, AutocompleteOptionType.COLUMN, null)
-  ).toBeTruthy();
-
-  const options4 = autocompleterWithNames.autocomplete(
-    sqlWithColumn,
-    sqlWithColumn.length
-  );
-  expect(
-    containsOptionType(options4, AutocompleteOptionType.TABLE)
-  ).toBeTruthy();
-  expect(
-    containsOption(options4, AutocompleteOptionType.TABLE, "table1")
-  ).toBeTruthy();
-  expect(
-    containsOptionType(options4, AutocompleteOptionType.COLUMN)
-  ).toBeTruthy();
-  expect(
-    containsOption(options4, AutocompleteOptionType.COLUMN, "columnA")
+    containsOption(options3, AutocompleteOptionType.COLUMN, "column1")
   ).toBeTruthy();
 });
 

@@ -1,32 +1,12 @@
 import { SQLAutocomplete, SQLDialect, AutocompleteOptionType } from "../index";
 
 import { containsOption, containsOptionType } from "./utils/utils";
-import {
-  tableNames,
-  columnNames,
-  viewNames,
-  schemaNames,
-} from "./utils/testData";
+import { schemas } from "./utils/testData";
 
 let autocompleter: SQLAutocomplete;
-let autocompleterWithViews: SQLAutocomplete;
-let fullAutocompleter: SQLAutocomplete;
 
 beforeAll(() => {
-  autocompleter = new SQLAutocomplete(SQLDialect.MYSQL);
-  autocompleterWithViews = new SQLAutocomplete(
-    SQLDialect.MYSQL,
-    tableNames,
-    columnNames,
-    viewNames
-  );
-  fullAutocompleter = new SQLAutocomplete(
-    SQLDialect.MYSQL,
-    tableNames,
-    columnNames,
-    viewNames,
-    schemaNames
-  );
+  autocompleter = new SQLAutocomplete(SQLDialect.MYSQL, schemas);
 });
 
 test("autocomplete detects table location", () => {
@@ -76,16 +56,17 @@ test("autocomplete when position is not provided", () => {
 test("shouldn't autocomplete view in create view statement", () => {
   const sql = "CREATE VIEW t";
 
-  expect(autocompleterWithViews.viewNames.length).toBe(2);
-
-  const options = autocompleterWithViews.autocomplete(sql, sql.length);
+  const options = autocompleter.autocomplete(sql, sql.length);
 
   expect(containsOptionType(options, AutocompleteOptionType.VIEW)).toBeFalsy();
   expect(
     containsOptionType(options, AutocompleteOptionType.TABLE)
   ).toBeTruthy();
   expect(
-    containsOption(options, AutocompleteOptionType.TABLE, "table1")
+    containsOption(options, AutocompleteOptionType.TABLE, "table1schema1")
+  ).toBeTruthy();
+  expect(
+    containsOption(options, AutocompleteOptionType.TABLE, "table2schema2")
   ).toBeTruthy();
   expect(
     containsOptionType(options, AutocompleteOptionType.COLUMN)
@@ -93,13 +74,13 @@ test("shouldn't autocomplete view in create view statement", () => {
 });
 
 test("autocomplete view in drop view statement", () => {
-  const sql = "drop VIEW t";
+  const sql = "drop VIEW v";
 
-  const options = autocompleterWithViews.autocomplete(sql, sql.length);
+  const options = autocompleter.autocomplete(sql, sql.length);
 
   expect(containsOptionType(options, AutocompleteOptionType.VIEW)).toBeTruthy();
   expect(
-    containsOption(options, AutocompleteOptionType.VIEW, "tableview1")
+    containsOption(options, AutocompleteOptionType.VIEW, "view1schema1")
   ).toBeTruthy();
   expect(
     containsOptionType(options, AutocompleteOptionType.COLUMN)
@@ -109,28 +90,31 @@ test("autocomplete view in drop view statement", () => {
 test("autocomplete views and tables in select stmt", () => {
   const sql = "SELECT * FROM t";
 
-  const options = autocompleterWithViews.autocomplete(sql, sql.length);
+  const options = autocompleter.autocomplete(sql, sql.length);
 
   expect(containsOptionType(options, AutocompleteOptionType.VIEW)).toBeTruthy();
   expect(
     containsOptionType(options, AutocompleteOptionType.TABLE)
   ).toBeTruthy();
   expect(
-    containsOption(options, AutocompleteOptionType.VIEW, "tableview1")
+    containsOption(options, AutocompleteOptionType.VIEW, "view1schema1")
   ).toBeTruthy();
   expect(
-    containsOption(options, AutocompleteOptionType.TABLE, "table1")
+    containsOption(options, AutocompleteOptionType.TABLE, "table1schema1")
   ).toBeTruthy();
 });
 
 test("autocomplete view in update statement", () => {
-  const sql = "UPDATE t";
+  const sql = "UPDATE v";
 
-  const options = autocompleterWithViews.autocomplete(sql, sql.length);
+  const options = autocompleter.autocomplete(sql, sql.length);
 
   expect(containsOptionType(options, AutocompleteOptionType.VIEW)).toBeTruthy();
   expect(
-    containsOption(options, AutocompleteOptionType.VIEW, "tableview1")
+    containsOption(options, AutocompleteOptionType.VIEW, "view1schema1")
+  ).toBeTruthy();
+  expect(
+    containsOption(options, AutocompleteOptionType.VIEW, "view1schema2")
   ).toBeTruthy();
   expect(
     containsOptionType(options, AutocompleteOptionType.COLUMN)
@@ -138,13 +122,16 @@ test("autocomplete view in update statement", () => {
 });
 
 test("autocomplete view in insert statement", () => {
-  const sql = "INSERT INTO t";
+  const sql = "INSERT INTO v";
 
-  const options = autocompleterWithViews.autocomplete(sql, sql.length);
+  const options = autocompleter.autocomplete(sql, sql.length);
 
   expect(containsOptionType(options, AutocompleteOptionType.VIEW)).toBeTruthy();
   expect(
-    containsOption(options, AutocompleteOptionType.VIEW, "tableview1")
+    containsOption(options, AutocompleteOptionType.VIEW, "view1schema1")
+  ).toBeTruthy();
+  expect(
+    containsOption(options, AutocompleteOptionType.VIEW, "view1schema2")
   ).toBeTruthy();
   expect(
     containsOptionType(options, AutocompleteOptionType.COLUMN)
@@ -152,13 +139,16 @@ test("autocomplete view in insert statement", () => {
 });
 
 test("autocomplete view in delete statement", () => {
-  const sql = "DELETE t";
+  const sql = "DELETE v";
 
-  const options = autocompleterWithViews.autocomplete(sql, sql.length);
+  const options = autocompleter.autocomplete(sql, sql.length);
 
   expect(containsOptionType(options, AutocompleteOptionType.VIEW)).toBeTruthy();
   expect(
-    containsOption(options, AutocompleteOptionType.VIEW, "tableview1")
+    containsOption(options, AutocompleteOptionType.VIEW, "view1schema1")
+  ).toBeTruthy();
+  expect(
+    containsOption(options, AutocompleteOptionType.VIEW, "view1schema2")
   ).toBeTruthy();
   expect(
     containsOptionType(options, AutocompleteOptionType.COLUMN)
@@ -166,13 +156,16 @@ test("autocomplete view in delete statement", () => {
 });
 
 test("autocomplete view in rename statement", () => {
-  const sql = "RENAME t";
+  const sql = "RENAME v";
 
-  const options = autocompleterWithViews.autocomplete(sql, sql.length);
+  const options = autocompleter.autocomplete(sql, sql.length);
 
   expect(containsOptionType(options, AutocompleteOptionType.VIEW)).toBeTruthy();
   expect(
-    containsOption(options, AutocompleteOptionType.VIEW, "tableview1")
+    containsOption(options, AutocompleteOptionType.VIEW, "view1schema1")
+  ).toBeTruthy();
+  expect(
+    containsOption(options, AutocompleteOptionType.VIEW, "view1schema2")
   ).toBeTruthy();
   expect(
     containsOptionType(options, AutocompleteOptionType.COLUMN)
@@ -180,13 +173,16 @@ test("autocomplete view in rename statement", () => {
 });
 
 test("autocomplete view in alter view statement", () => {
-  const sql = "ALTER t";
+  const sql = "ALTER v";
 
-  const options = autocompleterWithViews.autocomplete(sql, sql.length);
+  const options = autocompleter.autocomplete(sql, sql.length);
 
   expect(containsOptionType(options, AutocompleteOptionType.VIEW)).toBeTruthy();
   expect(
-    containsOption(options, AutocompleteOptionType.VIEW, "tableview1")
+    containsOption(options, AutocompleteOptionType.VIEW, "view1schema1")
+  ).toBeTruthy();
+  expect(
+    containsOption(options, AutocompleteOptionType.VIEW, "view1schema2")
   ).toBeTruthy();
   expect(
     containsOptionType(options, AutocompleteOptionType.COLUMN)
@@ -196,7 +192,7 @@ test("autocomplete view in alter view statement", () => {
 test("autocomplete schema in select statement", () => {
   const sql = "SELECT * FROM s";
 
-  const options = fullAutocompleter.autocomplete(sql, sql.length);
+  const options = autocompleter.autocomplete(sql, sql.length);
 
   expect(
     containsOptionType(options, AutocompleteOptionType.SCHEMA)
@@ -215,7 +211,7 @@ test("autocomplete schema in select statement", () => {
 test("shouldn't autocomplete schema twice", () => {
   const sql = "SELECT * FROM schema1.s";
 
-  const options = fullAutocompleter.autocomplete(sql, sql.length);
+  const options = autocompleter.autocomplete(sql, sql.length);
 
   expect(
     containsOptionType(options, AutocompleteOptionType.SCHEMA)

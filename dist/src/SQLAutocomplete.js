@@ -329,14 +329,11 @@ class SQLAutocomplete {
     _addTableSuggestions(autocompleteOptions, tokenIndex, tokens) {
         let tables = this.schemaManager.getAllTableNames();
         if ([antlr4ts_sql_1.SQLDialect.MYSQL, antlr4ts_sql_1.SQLDialect.PLpgSQL].includes(this.dialect)) {
-            // 2 cases
-            // select * from public.
-            // select * from public.a
             const tokenList = tokens.getTokens();
             const currentToken = tokenList[tokenIndex];
             const previousToken = tokenList[tokenIndex - 1];
             const tokenBeforePrevious = tokenList[tokenIndex - 2];
-            // Case 1: Current token is DOT, previous is IDENTIFIER (Schema suggestion)
+            // Case 1: Current token is DOT, previous is IDENTIFIER
             const isCurrentTokenDot = [
                 antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.DOT,
@@ -348,7 +345,7 @@ class SQLAutocomplete {
             if (isCurrentTokenDot && isPreviousTokenIdentifier) {
                 tables = this.schemaManager.getTableNamesFromSchema(previousToken.text);
             }
-            // Case 2: Current token is IDENTIFIER, previous is DOT, and one before is IDENTIFIER (Table.column suggestion)
+            // Case 2: Current token is IDENTIFIER, previous is DOT, and one before is IDENTIFIER
             const isCurrentTokenIdentifier = [
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
                 antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
@@ -376,14 +373,11 @@ class SQLAutocomplete {
     _addViewSuggestions(autocompleteOptions, tokenIndex, tokens) {
         let views = this.schemaManager.getAllViewNames();
         if ([antlr4ts_sql_1.SQLDialect.MYSQL, antlr4ts_sql_1.SQLDialect.PLpgSQL].includes(this.dialect)) {
-            // 2 cases
-            // select * from public.
-            // select * from public.a
             const tokenList = tokens.getTokens();
             const currentToken = tokenList[tokenIndex];
             const previousToken = tokenList[tokenIndex - 1];
             const tokenBeforePrevious = tokenList[tokenIndex - 2];
-            // Case 1: Current token is DOT, previous is IDENTIFIER (Schema suggestion)
+            // Case 1: Current token is DOT, previous is IDENTIFIER
             const isCurrentTokenDot = [
                 antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.DOT,
@@ -395,7 +389,7 @@ class SQLAutocomplete {
             if (isCurrentTokenDot && isPreviousTokenIdentifier) {
                 views = this.schemaManager.getViewNamesFromSchema(previousToken.text);
             }
-            // Case 2: Current token is IDENTIFIER, previous is DOT, and one before is IDENTIFIER (Table.column suggestion)
+            // Case 2: Current token is IDENTIFIER, previous is DOT, and one before is IDENTIFIER
             const isCurrentTokenIdentifier = [
                 antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
                 antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,

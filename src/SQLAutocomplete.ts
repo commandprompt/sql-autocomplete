@@ -401,15 +401,12 @@ export class SQLAutocomplete {
     let tables: string[] = this.schemaManager.getAllTableNames();
 
     if ([SQLDialect.MYSQL, SQLDialect.PLpgSQL].includes(this.dialect)) {
-      // 2 cases
-      // select * from public.
-      // select * from public.a
       const tokenList: Token[] = tokens.getTokens();
       const currentToken: Token = tokenList[tokenIndex];
       const previousToken: Token = tokenList[tokenIndex - 1];
       const tokenBeforePrevious: Token = tokenList[tokenIndex - 2];
 
-      // Case 1: Current token is DOT, previous is IDENTIFIER (Schema suggestion)
+      // Case 1: Current token is DOT, previous is IDENTIFIER
       const isCurrentTokenDot: boolean = [
         MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
         PLpgSQLGrammar.PLpgSQLParser.DOT,
@@ -423,7 +420,7 @@ export class SQLAutocomplete {
         tables = this.schemaManager.getTableNamesFromSchema(previousToken.text);
       }
 
-      // Case 2: Current token is IDENTIFIER, previous is DOT, and one before is IDENTIFIER (Table.column suggestion)
+      // Case 2: Current token is IDENTIFIER, previous is DOT, and one before is IDENTIFIER
       const isCurrentTokenIdentifier = [
         PLpgSQLGrammar.PLpgSQLParser.Identifier,
         MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
@@ -469,15 +466,12 @@ export class SQLAutocomplete {
     let views: string[] = this.schemaManager.getAllViewNames();
 
     if ([SQLDialect.MYSQL, SQLDialect.PLpgSQL].includes(this.dialect)) {
-      // 2 cases
-      // select * from public.
-      // select * from public.a
       const tokenList: Token[] = tokens.getTokens();
       const currentToken: Token = tokenList[tokenIndex];
       const previousToken: Token = tokenList[tokenIndex - 1];
       const tokenBeforePrevious: Token = tokenList[tokenIndex - 2];
 
-      // Case 1: Current token is DOT, previous is IDENTIFIER (Schema suggestion)
+      // Case 1: Current token is DOT, previous is IDENTIFIER
       const isCurrentTokenDot: boolean = [
         MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
         PLpgSQLGrammar.PLpgSQLParser.DOT,
@@ -491,7 +485,7 @@ export class SQLAutocomplete {
         views = this.schemaManager.getViewNamesFromSchema(previousToken.text);
       }
 
-      // Case 2: Current token is IDENTIFIER, previous is DOT, and one before is IDENTIFIER (Table.column suggestion)
+      // Case 2: Current token is IDENTIFIER, previous is DOT, and one before is IDENTIFIER
       const isCurrentTokenIdentifier = [
         PLpgSQLGrammar.PLpgSQLParser.Identifier,
         MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
