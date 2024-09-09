@@ -4,11 +4,11 @@ export const schemas = [
     tables: [
       {
         name: "table1schema1",
-        columns: ["column1", "column2"],
+        columns: ["column1table1schema1", "column2table1schema1"],
       },
       {
         name: "table2schema1",
-        columns: ["column1", "column2"],
+        columns: ["column1table2schema1", "column2table2schema1"],
       },
     ],
     views: [

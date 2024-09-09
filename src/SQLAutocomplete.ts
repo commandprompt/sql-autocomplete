@@ -183,8 +183,56 @@ export class SQLAutocomplete {
     }
 
     if (isColumnCandidatePosition) {
-      //TODO implement columns suggestion based on schema or table
       let columns: string[] = this.schemaManager.getAllColumns();
+
+      if ([SQLDialect.MYSQL, SQLDialect.PLpgSQL].includes(this.dialect)) {
+        const tokenList: Token[] = tokens.getTokens();
+        const currentToken: Token = tokenList[tokenIndex];
+        const previousToken: Token = tokenList[tokenIndex - 1];
+        const tokenBeforePrevious: Token = tokenList[tokenIndex - 2];
+
+        // Case 1: Current token is DOT, previous is IDENTIFIER
+        const isCurrentTokenDot: boolean = [
+          MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
+          PLpgSQLGrammar.PLpgSQLParser.DOT,
+        ].includes(currentToken?.type);
+        const isPreviousTokenIdentifier: boolean = [
+          PLpgSQLGrammar.PLpgSQLParser.Identifier,
+          MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
+        ].includes(previousToken?.type);
+
+        if (isCurrentTokenDot && isPreviousTokenIdentifier) {
+          columns = this.schemaManager.getColumnsFromTableOrView(
+            previousToken.text
+          );
+        }
+
+        // Case 2: Current token is IDENTIFIER, previous is DOT, and one before is IDENTIFIER
+        const isCurrentTokenIdentifier = [
+          PLpgSQLGrammar.PLpgSQLParser.Identifier,
+          MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
+        ].includes(currentToken?.type);
+
+        const isPreviousTokenDot: boolean = [
+          MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
+          PLpgSQLGrammar.PLpgSQLParser.DOT,
+        ].includes(previousToken?.type);
+
+        const isTokenBeforePreviousIsIdentifier = [
+          PLpgSQLGrammar.PLpgSQLParser.Identifier,
+          MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
+        ].includes(tokenBeforePrevious?.type);
+
+        if (
+          isCurrentTokenIdentifier &&
+          isPreviousTokenDot &&
+          isTokenBeforePreviousIsIdentifier
+        ) {
+          const tableName = tokenBeforePrevious.text;
+          columns = this.schemaManager.getColumnsFromTableOrView(tableName);
+        }
+      }
+
       for (const columnName of columns) {
         autocompleteOptions.unshift(
           new AutocompleteOption(columnName, AutocompleteOptionType.COLUMN)
@@ -261,7 +309,12 @@ export class SQLAutocomplete {
 
   _getPreferredRulesForColumn(): number[] {
     if (this.dialect === SQLDialect.MYSQL) {
-      return [MySQLGrammar.MultiQueryMySQLParser.RULE_columnRef];
+      return [
+        MySQLGrammar.MultiQueryMySQLParser.RULE_columnRef,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_tableWild,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_columnName,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_simpleExpr,
+      ];
     } else if (this.dialect === SQLDialect.PLSQL) {
       return [
         PlSQLGrammar.PlSqlParser.RULE_column_name,
@@ -291,15 +344,9 @@ export class SQLAutocomplete {
       return [PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name];
     } else if (this.dialect === SQLDialect.MYSQL) {
       return [
-        MySQLGrammar.MultiQueryMySQLParser.RULE_dropView,
-        MySQLGrammar.MultiQueryMySQLParser.RULE_alterView,
-        MySQLGrammar.MultiQueryMySQLParser.RULE_showStatement,
-        MySQLGrammar.MultiQueryMySQLParser.RULE_selectStatement,
-        MySQLGrammar.MultiQueryMySQLParser.RULE_updateStatement,
-        MySQLGrammar.MultiQueryMySQLParser.RULE_insertStatement,
-        MySQLGrammar.MultiQueryMySQLParser.RULE_deleteStatement,
-        MySQLGrammar.MultiQueryMySQLParser.RULE_renameTableStatement,
-        MySQLGrammar.MultiQueryMySQLParser.RULE_alterView,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_tableRef,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_fieldIdentifier,
+        MySQLGrammar.MultiQueryMySQLParser.RULE_viewRef,
       ];
     } else if (this.dialect === SQLDialect.PLSQL) {
       return [PlSQLGrammar.PlSqlParser.RULE_tableview_name];
@@ -410,11 +457,11 @@ export class SQLAutocomplete {
       const isCurrentTokenDot: boolean = [
         MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
         PLpgSQLGrammar.PLpgSQLParser.DOT,
-      ].includes(currentToken.type);
+      ].includes(currentToken?.type);
       const isPreviousTokenIdentifier: boolean = [
         PLpgSQLGrammar.PLpgSQLParser.Identifier,
         MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-      ].includes(previousToken.type);
+      ].includes(previousToken?.type);
 
       if (isCurrentTokenDot && isPreviousTokenIdentifier) {
         tables = this.schemaManager.getTableNamesFromSchema(previousToken.text);
@@ -424,17 +471,17 @@ export class SQLAutocomplete {
       const isCurrentTokenIdentifier = [
         PLpgSQLGrammar.PLpgSQLParser.Identifier,
         MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-      ].includes(currentToken.type);
+      ].includes(currentToken?.type);
 
       const isPreviousTokenDot: boolean = [
         MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
         PLpgSQLGrammar.PLpgSQLParser.DOT,
-      ].includes(previousToken.type);
+      ].includes(previousToken?.type);
 
       const isTokenBeforePreviousIsIdentifier = [
         PLpgSQLGrammar.PLpgSQLParser.Identifier,
         MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-      ].includes(tokenBeforePrevious.type);
+      ].includes(tokenBeforePrevious?.type);
 
       if (
         isCurrentTokenIdentifier &&
@@ -475,11 +522,11 @@ export class SQLAutocomplete {
       const isCurrentTokenDot: boolean = [
         MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
         PLpgSQLGrammar.PLpgSQLParser.DOT,
-      ].includes(currentToken.type);
+      ].includes(currentToken?.type);
       const isPreviousTokenIdentifier: boolean = [
         PLpgSQLGrammar.PLpgSQLParser.Identifier,
         MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-      ].includes(previousToken.type);
+      ].includes(previousToken?.type);
 
       if (isCurrentTokenDot && isPreviousTokenIdentifier) {
         views = this.schemaManager.getViewNamesFromSchema(previousToken.text);
@@ -489,17 +536,17 @@ export class SQLAutocomplete {
       const isCurrentTokenIdentifier = [
         PLpgSQLGrammar.PLpgSQLParser.Identifier,
         MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-      ].includes(currentToken.type);
+      ].includes(currentToken?.type);
 
       const isPreviousTokenDot: boolean = [
         MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
         PLpgSQLGrammar.PLpgSQLParser.DOT,
-      ].includes(previousToken.type);
+      ].includes(previousToken?.type);
 
       const isTokenBeforePreviousIsIdentifier = [
         PLpgSQLGrammar.PLpgSQLParser.Identifier,
         MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-      ].includes(tokenBeforePrevious.type);
+      ].includes(tokenBeforePrevious?.type);
 
       if (
         isCurrentTokenIdentifier &&

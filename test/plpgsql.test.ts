@@ -30,6 +30,54 @@ test("autocomplete detects column location", () => {
   ).toBeTruthy();
 });
 
+test("autocomplete detects column location based on table", () => {
+  const sqlWithDot = "SELECT * FROM table1schema1 WHERE table1schema1.";
+  const plpgsqlOptions = autocompleter.autocomplete(
+    sqlWithDot,
+    sqlWithDot.length
+  );
+  expect(
+    containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      plpgsqlOptions,
+      AutocompleteOptionType.COLUMN,
+      "column1table1schema1"
+    )
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      plpgsqlOptions,
+      AutocompleteOptionType.COLUMN,
+      "column1table2schema1"
+    )
+  ).toBeFalsy();
+
+  const sqlWithDotCol = "SELECT * FROM table1 WHERE table1schema1.c";
+  const plpgsqlOptions2 = autocompleter.autocomplete(
+    sqlWithDotCol,
+    sqlWithDotCol.length
+  );
+  expect(
+    containsOptionType(plpgsqlOptions2, AutocompleteOptionType.COLUMN)
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      plpgsqlOptions2,
+      AutocompleteOptionType.COLUMN,
+      "column1table1schema1"
+    )
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      plpgsqlOptions2,
+      AutocompleteOptionType.COLUMN,
+      "column1table2schema1"
+    )
+  ).toBeFalsy();
+});
+
 test("autocomplete next word", () => {
   const sql = "SELECT ";
   const plpgsqlOptions = autocompleter.autocomplete(sql);

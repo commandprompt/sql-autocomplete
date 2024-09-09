@@ -31,6 +31,54 @@ test("autocomplete detects column location", () => {
   ).toBeTruthy();
 });
 
+test.only("autocomplete detects column location based on table", () => {
+  const sqlWithDot = "SELECT * FROM table1schema1 WHERE table1schema1.";
+  const plpgsqlOptions = autocompleter.autocomplete(
+    sqlWithDot,
+    sqlWithDot.length
+  );
+  expect(
+    containsOptionType(plpgsqlOptions, AutocompleteOptionType.COLUMN)
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      plpgsqlOptions,
+      AutocompleteOptionType.COLUMN,
+      "column1table1schema1"
+    )
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      plpgsqlOptions,
+      AutocompleteOptionType.COLUMN,
+      "column1table2schema1"
+    )
+  ).toBeFalsy();
+
+  const sqlWithDotCol = "SELECT * FROM table1 WHERE table1schema1.c";
+  const plpgsqlOptions2 = autocompleter.autocomplete(
+    sqlWithDotCol,
+    sqlWithDotCol.length
+  );
+  expect(
+    containsOptionType(plpgsqlOptions2, AutocompleteOptionType.COLUMN)
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      plpgsqlOptions2,
+      AutocompleteOptionType.COLUMN,
+      "column1table1schema1"
+    )
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      plpgsqlOptions2,
+      AutocompleteOptionType.COLUMN,
+      "column1table2schema1"
+    )
+  ).toBeFalsy();
+});
+
 test("autocomplete next word", () => {
   const sql = "SELECT ";
   const mysqlOptions = autocompleter.autocomplete(sql);
@@ -138,8 +186,8 @@ test("autocomplete view in insert statement", () => {
   ).toBeFalsy();
 });
 
-test("autocomplete view in delete statement", () => {
-  const sql = "DELETE v";
+test("autocomplete view in drop statement", () => {
+  const sql = "DROP VIEW v";
 
   const options = autocompleter.autocomplete(sql, sql.length);
 
@@ -156,7 +204,7 @@ test("autocomplete view in delete statement", () => {
 });
 
 test("autocomplete view in rename statement", () => {
-  const sql = "RENAME v";
+  const sql = "RENAME TABLE v";
 
   const options = autocompleter.autocomplete(sql, sql.length);
 
@@ -173,7 +221,7 @@ test("autocomplete view in rename statement", () => {
 });
 
 test("autocomplete view in alter view statement", () => {
-  const sql = "ALTER v";
+  const sql = "ALTER VIEW v";
 
   const options = autocompleter.autocomplete(sql, sql.length);
 

@@ -175,17 +175,17 @@ export class SchemaManager {
     ]);
   }
 
-  getColumnsFromTableOrView(tableName: string): Column[] {
+  getColumnsFromTableOrView(tableName: string): string[] {
     for (const schema of this.schemas) {
       const table = schema
         .getTables()
         .find((table) => table.getName() === tableName);
-      if (table) return table.columns;
+      if (table) return table.columns.map((col) => col.getName());
 
       const view = schema
         .getViews()
         .find((view) => view.getName() === tableName);
-      if (view) return view.columns;
+      if (view) return view.columns.map((col) => col.getName());
     }
     return [];
   }
