@@ -46,5 +46,5 @@ export declare class SchemaManager {
     getTableNamesFromSchema(schemaName: string): string[];
     getViewNamesFromSchema(schemaName: string): string[];
     getAllColumns(): string[];
-    getColumnsFromTableOrView(tableName: string): Column[];
+    getColumnsFromTableOrView(tableName: string): string[];
 }

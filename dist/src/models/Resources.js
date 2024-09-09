@@ -133,12 +133,12 @@ class SchemaManager {
                 .getTables()
                 .find((table) => table.getName() === tableName);
             if (table)
-                return table.columns;
+                return table.columns.map((col) => col.getName());
             const view = schema
                 .getViews()
                 .find((view) => view.getName() === tableName);
             if (view)
-                return view.columns;
+                return view.columns.map((col) => col.getName());
         }
         return [];
     }
