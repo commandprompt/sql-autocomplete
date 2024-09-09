@@ -21,4 +21,5 @@ export declare class SQLAutocomplete {
     _addTableSuggestions(autocompleteOptions: AutocompleteOption[], tokenIndex: number, tokens: CommonTokenStream): void;
     _addViewSuggestions(autocompleteOptions: AutocompleteOption[], tokenIndex: number, tokens: CommonTokenStream): void;
     _addPlaceholderIfEmpty(autocompleteOptions: AutocompleteOption[], optionType: AutocompleteOptionType): void;
+    _addColumnSuggestions(autocompleteOptions: AutocompleteOption[], tokenIndex: number, tokens: CommonTokenStream, sqlScript?: string, indexToAutocomplete?: number): void;
 }

@@ -230,22 +230,3 @@ test("shouldn't autocomplete schema twice", () => {
     containsOptionType(options, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
 });
-
-test("shouldn't autocomplete schema twice", () => {
-  const sql = "SELECT * FROM schema1.t";
-
-  const options = autocompleter.autocomplete(sql, sql.length);
-
-  expect(
-    containsOptionType(options, AutocompleteOptionType.SCHEMA)
-  ).toBeFalsy();
-  expect(
-    containsOption(options, AutocompleteOptionType.SCHEMA, "schema1")
-  ).toBeFalsy();
-  expect(
-    containsOption(options, AutocompleteOptionType.SCHEMA, "schema2")
-  ).toBeFalsy();
-  expect(
-    containsOptionType(options, AutocompleteOptionType.COLUMN)
-  ).toBeFalsy();
-});
