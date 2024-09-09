@@ -76,6 +76,32 @@ test("autocomplete detects column location based on table", () => {
       "column1table2schema1"
     )
   ).toBeFalsy();
+
+  const sqlWithColInsideStmt =
+    "SELECT table1schema1.column2table1schema1, table1schema1. FROM table1 WHERE table1schema1";
+
+  const plpgsqlOptions3 = autocompleter.autocomplete(
+    sqlWithColInsideStmt,
+    "SELECT table1schema1.column2table1schema1, table1schema1.".length
+  );
+
+  expect(
+    containsOptionType(plpgsqlOptions3, AutocompleteOptionType.COLUMN)
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      plpgsqlOptions3,
+      AutocompleteOptionType.COLUMN,
+      "column1table1schema1"
+    )
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      plpgsqlOptions3,
+      AutocompleteOptionType.COLUMN,
+      "column1table2schema1"
+    )
+  ).toBeFalsy();
 });
 
 test("autocomplete next word", () => {

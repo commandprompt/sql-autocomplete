@@ -121,6 +121,7 @@ class SQLAutocomplete {
             let columns = this.schemaManager.getAllColumns();
             if ([antlr4ts_sql_1.SQLDialect.MYSQL, antlr4ts_sql_1.SQLDialect.PLpgSQL].includes(this.dialect)) {
                 const tokenList = tokens.getTokens();
+                const tokenIndex = this._getTokenIndexAt(tokenList, sqlScript, indexToAutocomplete);
                 const currentToken = tokenList[tokenIndex];
                 const previousToken = tokenList[tokenIndex - 1];
                 const tokenBeforePrevious = tokenList[tokenIndex - 2];

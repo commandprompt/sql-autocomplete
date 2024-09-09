@@ -187,6 +187,11 @@ export class SQLAutocomplete {
 
       if ([SQLDialect.MYSQL, SQLDialect.PLpgSQL].includes(this.dialect)) {
         const tokenList: Token[] = tokens.getTokens();
+        const tokenIndex = this._getTokenIndexAt(
+          tokenList,
+          sqlScript,
+          indexToAutocomplete
+        );
         const currentToken: Token = tokenList[tokenIndex];
         const previousToken: Token = tokenList[tokenIndex - 1];
         const tokenBeforePrevious: Token = tokenList[tokenIndex - 2];
