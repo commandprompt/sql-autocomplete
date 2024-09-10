@@ -7,6 +7,7 @@ const AutocompleteOption_1 = require("./models/AutocompleteOption");
 const AutocompleteOptionType_1 = require("./models/AutocompleteOptionType");
 const SimpleSQLTokenizer_1 = require("./models/SimpleSQLTokenizer");
 const Resources_1 = require("./models/Resources");
+const constants_1 = require("./models/constants");
 class SQLAutocomplete {
     constructor(dialect, schemas) {
         this.dialect = dialect;
@@ -42,7 +43,7 @@ class SQLAutocomplete {
         const allTokens = new antlr4ts_sql_1.CommonTokenStream(simpleSQLTokenizer);
         const tokenIndex = this._getTokenIndexAt(allTokens.getTokens(), sqlScript, indexToAutocomplete);
         if (tokenIndex === null) {
-            return null;
+            return [];
         }
         const token = allTokens.getTokens()[tokenIndex];
         const tokenString = this._getTokenString(token, sqlScript, indexToAutocomplete);
@@ -61,23 +62,16 @@ class SQLAutocomplete {
             // core.showDebugOutput = true;
             // core.showRuleStack = true;
             const candidates = core.collectCandidates(tokenIndex);
-            for (const candidateToken of candidates.tokens) {
-                let candidateTokenValue = parser.vocabulary.getDisplayName(candidateToken[0]);
+            for (const [tokenType, followOnTokens] of candidates.tokens) {
+                let candidateTokenValue = parser.vocabulary.getDisplayName(tokenType);
                 if (this.dialect === antlr4ts_sql_1.SQLDialect.MYSQL &&
                     candidateTokenValue.endsWith("_SYMBOL")) {
                     candidateTokenValue = candidateTokenValue.substring(0, candidateTokenValue.length - 7);
                 }
-                if (candidateTokenValue.startsWith("'") &&
-                    candidateTokenValue.endsWith("'")) {
-                    candidateTokenValue = candidateTokenValue.substring(1, candidateTokenValue.length - 1);
-                }
-                let followOnTokens = candidateToken[1];
+                candidateTokenValue = this._trimQuotes(candidateTokenValue);
                 for (const followOnToken of followOnTokens) {
                     let followOnTokenValue = parser.vocabulary.getDisplayName(followOnToken);
-                    if (followOnTokenValue.startsWith("'") &&
-                        followOnTokenValue.endsWith("'")) {
-                        followOnTokenValue = followOnTokenValue.substring(1, followOnTokenValue.length - 1);
-                    }
+                    followOnTokenValue = this._trimQuotes(followOnTokenValue);
                     if (!(followOnTokenValue.length === 1 &&
                         /[^\w\s]/.test(followOnTokenValue))) {
                         candidateTokenValue += " ";
@@ -144,146 +138,19 @@ class SQLAutocomplete {
         return true;
     }
     _getPreferredRulesForSchema() {
-        if (this.dialect === antlr4ts_sql_1.SQLDialect.PLpgSQL) {
-            return [antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_query_schema_name];
-        }
-        else if (this.dialect === antlr4ts_sql_1.SQLDialect.MYSQL) {
-            return [
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_schemaRef,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_schemaName,
-            ];
-        }
-        return [];
+        return constants_1.preferredRulesForSchema[this.dialect] || [];
     }
     _getPreferredRulesForTable() {
-        if (this.dialect === antlr4ts_sql_1.SQLDialect.MYSQL) {
-            return [
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_tableRef,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_fieldIdentifier,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_createView,
-            ];
-        }
-        else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLSQL) {
-            return [
-                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_tableview_name,
-                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_table_element,
-            ];
-        }
-        else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLpgSQL) {
-            return [
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
-            ];
-        }
-        else if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
-            return [
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_table_name,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_view_name,
-            ];
-        }
-        return [];
+        return constants_1.preferredRulesForTable[this.dialect] || [];
     }
     _getPreferredRulesForColumn() {
-        if (this.dialect === antlr4ts_sql_1.SQLDialect.MYSQL) {
-            return [
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_columnRef,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_tableWild,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_columnName,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_simpleExpr,
-            ];
-        }
-        else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLSQL) {
-            return [
-                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_column_name,
-                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_general_element,
-            ];
-        }
-        else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLpgSQL) {
-            return [
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_var,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_indirection_identifier,
-            ];
-        }
-        else if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
-            return [
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_column_name,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_column_alias,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_result_column,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_expr,
-            ];
-        }
-        return [];
+        return constants_1.preferredRulesForColumn[this.dialect] || [];
     }
     _getPreferredRulesForView() {
-        if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
-            return [
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_any_name,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_table_name,
-            ];
-        }
-        else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLpgSQL) {
-            return [antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name];
-        }
-        else if (this.dialect === antlr4ts_sql_1.SQLDialect.MYSQL) {
-            return [
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_tableRef,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_fieldIdentifier,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.RULE_viewRef,
-            ];
-        }
-        else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLSQL) {
-            return [antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_tableview_name];
-        }
-        return [];
+        return constants_1.preferredRulesForView[this.dialect] || [];
     }
     _getTokensToIgnore() {
-        if (this.dialect === antlr4ts_sql_1.SQLDialect.MYSQL) {
-            return [
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.COMMA_SYMBOL,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.SEMICOLON_SYMBOL,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.OPEN_PAR_SYMBOL,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.CLOSE_PAR_SYMBOL,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.OPEN_CURLY_SYMBOL,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.CLOSE_CURLY_SYMBOL,
-            ];
-        }
-        else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLSQL) {
-            return [
-                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.PERIOD,
-                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.COMMA,
-                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.SEMICOLON,
-                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.DOUBLE_PERIOD,
-                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.IDENTIFIER,
-                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.LEFT_PAREN,
-                antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RIGHT_PAREN,
-            ];
-        }
-        else if (this.dialect === antlr4ts_sql_1.SQLDialect.PLpgSQL) {
-            return [
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.DOT,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.COMMA,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.SEMI_COLON,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.DOUBLE_DOT,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.LEFT_PAREN,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RIGHT_PAREN,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.LEFT_BRACKET,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RIGHT_BRACKET,
-            ];
-        }
-        else if (this.dialect === antlr4ts_sql_1.SQLDialect.SQLITE) {
-            return [
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.DOT,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.COMMA,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.SCOL,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.IDENTIFIER,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.OPEN_PAR,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.CLOSE_PAR,
-            ];
-        }
-        return [];
+        return constants_1.tokensToIgnore[this.dialect] || [];
     }
     _getTokenIndexAt(tokens, fullString, offset) {
         if (tokens.length === 0) {
@@ -330,30 +197,15 @@ class SQLAutocomplete {
             const previousToken = tokenList[tokenIndex - 1];
             const tokenBeforePrevious = tokenList[tokenIndex - 2];
             // Case 1: Current token is DOT, previous is IDENTIFIER
-            const isCurrentTokenDot = [
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.DOT,
-            ].includes(currentToken === null || currentToken === void 0 ? void 0 : currentToken.type);
-            const isPreviousTokenIdentifier = [
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-            ].includes(previousToken === null || previousToken === void 0 ? void 0 : previousToken.type);
+            const isCurrentTokenDot = this._isDotToken(currentToken === null || currentToken === void 0 ? void 0 : currentToken.type);
+            const isPreviousTokenIdentifier = this._isIdentifierToken(previousToken === null || previousToken === void 0 ? void 0 : previousToken.type);
             if (isCurrentTokenDot && isPreviousTokenIdentifier) {
                 tables = this.schemaManager.getTableNamesFromSchema(previousToken.text);
             }
             // Case 2: Current token is IDENTIFIER, previous is DOT, and one before is IDENTIFIER
-            const isCurrentTokenIdentifier = [
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-            ].includes(currentToken === null || currentToken === void 0 ? void 0 : currentToken.type);
-            const isPreviousTokenDot = [
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.DOT,
-            ].includes(previousToken === null || previousToken === void 0 ? void 0 : previousToken.type);
-            const isTokenBeforePreviousIsIdentifier = [
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-            ].includes(tokenBeforePrevious === null || tokenBeforePrevious === void 0 ? void 0 : tokenBeforePrevious.type);
+            const isCurrentTokenIdentifier = this._isIdentifierToken(currentToken === null || currentToken === void 0 ? void 0 : currentToken.type);
+            const isPreviousTokenDot = this._isDotToken(previousToken === null || previousToken === void 0 ? void 0 : previousToken.type);
+            const isTokenBeforePreviousIsIdentifier = this._isIdentifierToken(tokenBeforePrevious === null || tokenBeforePrevious === void 0 ? void 0 : tokenBeforePrevious.type);
             if (isCurrentTokenIdentifier &&
                 isPreviousTokenDot &&
                 isTokenBeforePreviousIsIdentifier) {
@@ -374,30 +226,15 @@ class SQLAutocomplete {
             const previousToken = tokenList[tokenIndex - 1];
             const tokenBeforePrevious = tokenList[tokenIndex - 2];
             // Case 1: Current token is DOT, previous is IDENTIFIER
-            const isCurrentTokenDot = [
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.DOT,
-            ].includes(currentToken === null || currentToken === void 0 ? void 0 : currentToken.type);
-            const isPreviousTokenIdentifier = [
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-            ].includes(previousToken === null || previousToken === void 0 ? void 0 : previousToken.type);
+            const isCurrentTokenDot = this._isDotToken(currentToken === null || currentToken === void 0 ? void 0 : currentToken.type);
+            const isPreviousTokenIdentifier = this._isIdentifierToken(previousToken === null || previousToken === void 0 ? void 0 : previousToken.type);
             if (isCurrentTokenDot && isPreviousTokenIdentifier) {
                 views = this.schemaManager.getViewNamesFromSchema(previousToken.text);
             }
             // Case 2: Current token is IDENTIFIER, previous is DOT, and one before is IDENTIFIER
-            const isCurrentTokenIdentifier = [
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-            ].includes(currentToken === null || currentToken === void 0 ? void 0 : currentToken.type);
-            const isPreviousTokenDot = [
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.DOT,
-            ].includes(previousToken === null || previousToken === void 0 ? void 0 : previousToken.type);
-            const isTokenBeforePreviousIsIdentifier = [
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-            ].includes(tokenBeforePrevious === null || tokenBeforePrevious === void 0 ? void 0 : tokenBeforePrevious.type);
+            const isCurrentTokenIdentifier = this._isIdentifierToken(currentToken === null || currentToken === void 0 ? void 0 : currentToken.type);
+            const isPreviousTokenDot = this._isDotToken(previousToken === null || previousToken === void 0 ? void 0 : previousToken.type);
+            const isTokenBeforePreviousIsIdentifier = this._isIdentifierToken(tokenBeforePrevious === null || tokenBeforePrevious === void 0 ? void 0 : tokenBeforePrevious.type);
             if (isCurrentTokenIdentifier &&
                 isPreviousTokenDot &&
                 isTokenBeforePreviousIsIdentifier) {
@@ -428,35 +265,15 @@ class SQLAutocomplete {
             const previousToken = tokenList[tokenIndex - 1];
             const tokenBeforePrevious = tokenList[tokenIndex - 2];
             // Case 1: Current token is DOT, previous is IDENTIFIER
-            const isCurrentTokenDot = [
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.DOT,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.DOT,
-            ].includes(currentToken === null || currentToken === void 0 ? void 0 : currentToken.type);
-            const isPreviousTokenIdentifier = [
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.IDENTIFIER,
-            ].includes(previousToken === null || previousToken === void 0 ? void 0 : previousToken.type);
+            const isCurrentTokenDot = this._isDotToken(currentToken === null || currentToken === void 0 ? void 0 : currentToken.type);
+            const isPreviousTokenIdentifier = this._isIdentifierToken(previousToken === null || previousToken === void 0 ? void 0 : previousToken.type);
             if (isCurrentTokenDot && isPreviousTokenIdentifier) {
                 columns = this.schemaManager.getColumnsFromTableOrView(previousToken.text);
             }
             // Case 2: Current token is IDENTIFIER, previous is DOT, and one before is IDENTIFIER
-            const isCurrentTokenIdentifier = [
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.IDENTIFIER,
-            ].includes(currentToken === null || currentToken === void 0 ? void 0 : currentToken.type);
-            const isPreviousTokenDot = [
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.DOT,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.DOT,
-            ].includes(previousToken === null || previousToken === void 0 ? void 0 : previousToken.type);
-            const isTokenBeforePreviousIsIdentifier = [
-                antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
-                antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
-                antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.IDENTIFIER,
-            ].includes(tokenBeforePrevious === null || tokenBeforePrevious === void 0 ? void 0 : tokenBeforePrevious.type);
+            const isCurrentTokenIdentifier = this._isIdentifierToken(currentToken === null || currentToken === void 0 ? void 0 : currentToken.type);
+            const isPreviousTokenDot = this._isDotToken(previousToken === null || previousToken === void 0 ? void 0 : previousToken.type);
+            const isTokenBeforePreviousIsIdentifier = this._isIdentifierToken(tokenBeforePrevious === null || tokenBeforePrevious === void 0 ? void 0 : tokenBeforePrevious.type);
             if (isCurrentTokenIdentifier &&
                 isPreviousTokenDot &&
                 isTokenBeforePreviousIsIdentifier) {
@@ -468,6 +285,17 @@ class SQLAutocomplete {
             autocompleteOptions.unshift(new AutocompleteOption_1.AutocompleteOption(columnName, AutocompleteOptionType_1.AutocompleteOptionType.COLUMN));
         }
         this._addPlaceholderIfEmpty(autocompleteOptions, AutocompleteOptionType_1.AutocompleteOptionType.COLUMN);
+    }
+    _trimQuotes(value) {
+        return value.startsWith("'") && value.endsWith("'")
+            ? value.substring(1, value.length - 1)
+            : value;
+    }
+    _isDotToken(tokenType) {
+        return constants_1.dotRules.includes(tokenType);
+    }
+    _isIdentifierToken(tokenType) {
+        return constants_1.identifierRules.includes(tokenType);
     }
 }
 exports.SQLAutocomplete = SQLAutocomplete;
