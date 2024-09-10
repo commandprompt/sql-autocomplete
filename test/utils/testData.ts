@@ -1,4 +1,53 @@
-export const tableNames: string[] = ["table1", "table2"];
-export const columnNames: string[] = ["column1", "column2"];
-export const viewNames: string[] = ["tableview1", "tableview2"];
-export const schemaNames: string[] = ["schema1", "schema2"];
+export const schemas = [
+  {
+    name: "schema1",
+    tables: [
+      {
+        name: "table1schema1",
+        columns: ["column1table1schema1", "column2table1schema1"],
+      },
+      {
+        name: "table2schema1",
+        columns: ["column1table2schema1", "column2table2schema1"],
+      },
+    ],
+    views: [
+      {
+        name: "view1schema1",
+        columns: ["column1", "column2"],
+      },
+      {
+        name: "view2schema1",
+        columns: ["column1", "column2"],
+      },
+    ],
+  },
+  {
+    name: "schema2",
+    tables: [
+      {
+        name: "table1schema2",
+        columns: ["column1", "column2"],
+      },
+      {
+        name: "table2schema2",
+        columns: ["column1", "column2"],
+      },
+    ],
+    views: [
+      {
+        name: "view1schema2",
+        columns: ["column1", "column2"],
+      },
+      {
+        name: "view2schema2",
+        columns: ["column1", "column2"],
+      },
+    ],
+  },
+  {
+    name: "schema3",
+    tables: [],
+    views: [],
+  },
+];

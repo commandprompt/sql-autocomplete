@@ -16,18 +16,35 @@ export declare class Table {
     getName(): string;
     getFullName(): string;
 }
-export declare class Schema {
+export declare class View {
     name: string;
-    tables: Table[];
-    project?: Project;
-    constructor(name: string, tables: Table[]);
-    setProject(project: Project): void;
+    columns: Column[];
+    schema?: Schema;
+    constructor(name: string, columns: Column[]);
+    setSchema(schema: Schema): void;
     getName(): string;
     getFullName(): string;
 }
-export declare class Project {
+export declare class Schema {
     name: string;
-    schemas: Schema[];
-    constructor(name: string, schemas: Schema[]);
+    tables: Table[];
+    views: View[];
+    constructor(name: string, tables: Table[], views: View[]);
     getName(): string;
+    getFullName(): string;
+    getTables(): Table[];
+    getViews(): View[];
+}
+export declare class SchemaManager {
+    schemas: Schema[];
+    constructor(rawSchemas: any[]);
+    private initializeSchemas;
+    getAllSchemaNames(): string[];
+    getAllTableNames(): string[];
+    getAllViewNames(): string[];
+    getAllColumnNames(): string[];
+    getTableNamesFromSchema(schemaName: string): string[];
+    getViewNamesFromSchema(schemaName: string): string[];
+    getAllColumns(): string[];
+    getColumnsFromTableOrView(tableName: string): string[];
 }

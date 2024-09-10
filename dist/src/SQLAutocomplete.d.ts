@@ -1,16 +1,13 @@
 import { antlr4tsSQL, CommonTokenStream, Parser, SQLDialect } from "antlr4ts-sql";
 import { AutocompleteOption } from "./models/AutocompleteOption";
+import { AutocompleteOptionType } from "./models/AutocompleteOptionType";
+import { SchemaManager } from "./models/Resources";
 export declare class SQLAutocomplete {
     dialect: SQLDialect;
     antlr4tssql: antlr4tsSQL;
-    tableNames: string[];
-    columnNames: string[];
-    viewNames: string[];
-    schemaNames: string[];
-    constructor(dialect: SQLDialect, tableNames?: string[], columnNames?: string[], viewNames?: string[], schemaNames?: string[]);
+    schemaManager: SchemaManager;
+    constructor(dialect: SQLDialect, schemas: any[]);
     autocomplete(sqlScript: string, atIndex?: number): AutocompleteOption[];
-    setTableNames(tableNames: string[]): void;
-    setColumnNames(columnNames: string[]): void;
     _getTokens(sqlScript: string): CommonTokenStream;
     _getParser(tokens: CommonTokenStream): Parser;
     _tokenizeWhitespace(): boolean;
@@ -21,4 +18,11 @@ export declare class SQLAutocomplete {
     _getTokensToIgnore(): number[];
     _getTokenIndexAt(tokens: any[], fullString: string, offset: number): number;
     _getTokenString(token: any, fullString: string, offset: number): string;
+    _addTableSuggestions(autocompleteOptions: AutocompleteOption[], tokenIndex: number, tokens: CommonTokenStream): void;
+    _addViewSuggestions(autocompleteOptions: AutocompleteOption[], tokenIndex: number, tokens: CommonTokenStream): void;
+    _addPlaceholderIfEmpty(autocompleteOptions: AutocompleteOption[], optionType: AutocompleteOptionType): void;
+    _addColumnSuggestions(autocompleteOptions: AutocompleteOption[], tokenIndex: number, tokens: CommonTokenStream, sqlScript?: string, indexToAutocomplete?: number): void;
+    private _trimQuotes;
+    private _isDotToken;
+    private _isIdentifierToken;
 }
