@@ -230,3 +230,86 @@ test("shouldn't autocomplete schema twice", () => {
     containsOptionType(options, AutocompleteOptionType.COLUMN)
   ).toBeFalsy();
 });
+
+test("should correctly handle table aliases", () => {
+  const sql1 = "SELECT t.c FROM table1schema1 AS t;";
+  const sql2 = "SELECT t.c FROM table1schema1 t;";
+
+  const options1 = autocompleter.autocomplete(sql1, "SELECT t.c".length);
+  const options2 = autocompleter.autocomplete(sql2, "SELECT t.c".length);
+
+  expect(
+    containsOption(
+      options1,
+      AutocompleteOptionType.COLUMN,
+      "column1table1schema1"
+    )
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      options1,
+      AutocompleteOptionType.COLUMN,
+      "column2table1schema1"
+    )
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      options1,
+      AutocompleteOptionType.COLUMN,
+      "column1table2schema1"
+    )
+  ).toBeFalsy();
+
+  expect(
+    containsOption(
+      options2,
+      AutocompleteOptionType.COLUMN,
+      "column1table1schema1"
+    )
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      options2,
+      AutocompleteOptionType.COLUMN,
+      "column2table1schema1"
+    )
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      options2,
+      AutocompleteOptionType.COLUMN,
+      "column1table2schema1"
+    )
+  ).toBeFalsy();
+});
+
+test("should suggest columns for table aliases in JOIN statements", () => {
+  const sql = `SELECT t1. , t2.column2 
+    FROM table1schema1 AS t1 
+    JOIN table2schema1 AS t2 ON t1.id = t2.foreign_id;
+  `;
+
+  const options = autocompleter.autocomplete(sql, "SELECT t1.".length);
+
+  expect(
+    containsOption(
+      options,
+      AutocompleteOptionType.COLUMN,
+      "column1table1schema1"
+    )
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      options,
+      AutocompleteOptionType.COLUMN,
+      "column2table1schema1"
+    )
+  ).toBeTruthy();
+  expect(
+    containsOption(
+      options,
+      AutocompleteOptionType.COLUMN,
+      "column1table2schema1"
+    )
+  ).toBeFalsy();
+});

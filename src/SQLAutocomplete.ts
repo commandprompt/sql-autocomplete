@@ -25,14 +25,22 @@ export class SQLAutocomplete {
   dialect: SQLDialect;
   antlr4tssql: antlr4tsSQL;
   schemaManager: SchemaManager;
+  aliasMap: Map<string, string>; // Add this to store alias-to-table mapping
 
   constructor(dialect: SQLDialect, schemas: any[]) {
     this.dialect = dialect;
     this.antlr4tssql = new antlr4tsSQL(this.dialect);
     this.schemaManager = new SchemaManager(schemas);
+    this.aliasMap = new Map(); // Initialize the alias map
   }
 
   autocomplete(sqlScript: string, atIndex?: number): AutocompleteOption[] {
+    //prepare alias map before processing string and giving predictions
+    const tokens_all = this._getTokens(sqlScript);
+    this._getParser(tokens_all);
+    tokens_all.fill();
+    this.aliasMap = this._buildAliasMap(tokens_all);
+
     if (atIndex !== undefined && atIndex !== null) {
       // Remove everything after the index we want to get suggestions for,
       // it's not needed and keeping it in may impact which token gets selected for prediction
@@ -422,9 +430,9 @@ export class SQLAutocomplete {
       );
 
       if (isCurrentTokenDot && isPreviousTokenIdentifier) {
-        columns = this.schemaManager.getColumnsFromTableOrView(
-          previousToken.text
-        );
+        const tableName =
+          this.aliasMap.get(previousToken.text) || previousToken.text;
+        columns = this.schemaManager.getColumnsFromTableOrView(tableName);
       }
 
       // Case 2: Current token is IDENTIFIER, previous is DOT, and one before is IDENTIFIER
@@ -443,7 +451,9 @@ export class SQLAutocomplete {
         isPreviousTokenDot &&
         isTokenBeforePreviousIsIdentifier
       ) {
-        const tableName = tokenBeforePrevious.text;
+        const tableName =
+          this.aliasMap.get(tokenBeforePrevious.text) ||
+          tokenBeforePrevious.text;
         columns = this.schemaManager.getColumnsFromTableOrView(tableName);
       }
     }
@@ -471,5 +481,51 @@ export class SQLAutocomplete {
 
   private _isIdentifierToken(tokenType: number): boolean {
     return identifierRules.includes(tokenType);
+  }
+
+  _findNextNonWhitespaceToken(
+    tokenList: Token[],
+    startIndex: number
+  ): { token: Token; index: number } | null {
+    const notWhitespaceRegex = /[^\s]/;
+    for (let i = startIndex; i < tokenList.length; i++) {
+      const token = tokenList[i];
+      if (notWhitespaceRegex.test(token.text)) {
+        return { token, index: i };
+      }
+    }
+    return null; // No non-whitespace token found
+  }
+
+  private _buildAliasMap(tokens: CommonTokenStream): Map<string, string> {
+    const aliasMap = new Map<string, string>();
+    const tokenList = tokens.getTokens();
+
+    for (let i = 0; i < tokenList.length; i++) {
+      const currentToken = tokenList[i];
+      const nextToken = this._findNextNonWhitespaceToken(tokenList, i + 1);
+      if (!nextToken) return aliasMap;
+      const afterNextToken = this._findNextNonWhitespaceToken(
+        tokenList,
+        nextToken.index + 1
+      );
+      if (!afterNextToken) return aliasMap;
+
+      if (currentToken && nextToken && afterNextToken) {
+        if (
+          this._isIdentifierToken(currentToken.type) && // table name
+          nextToken?.token?.text?.toUpperCase() === "AS" && // optional AS keyword
+          this._isIdentifierToken(afterNextToken?.token?.type) // alias name
+        ) {
+          aliasMap.set(afterNextToken.token.text, currentToken.text);
+        } else if (
+          this._isIdentifierToken(currentToken.type) && // table name
+          this._isIdentifierToken(nextToken?.token?.type) // alias without AS
+        ) {
+          aliasMap.set(nextToken.token.text, currentToken.text);
+        }
+      }
+    }
+    return aliasMap;
   }
 }

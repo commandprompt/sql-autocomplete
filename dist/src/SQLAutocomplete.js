@@ -13,8 +13,14 @@ class SQLAutocomplete {
         this.dialect = dialect;
         this.antlr4tssql = new antlr4ts_sql_1.antlr4tsSQL(this.dialect);
         this.schemaManager = new Resources_1.SchemaManager(schemas);
+        this.aliasMap = new Map(); // Initialize the alias map
     }
     autocomplete(sqlScript, atIndex) {
+        //prepare alias map before processing string and giving predictions
+        const tokens_all = this._getTokens(sqlScript);
+        this._getParser(tokens_all);
+        tokens_all.fill();
+        this.aliasMap = this._buildAliasMap(tokens_all);
         if (atIndex !== undefined && atIndex !== null) {
             // Remove everything after the index we want to get suggestions for,
             // it's not needed and keeping it in may impact which token gets selected for prediction
@@ -268,7 +274,8 @@ class SQLAutocomplete {
             const isCurrentTokenDot = this._isDotToken(currentToken === null || currentToken === void 0 ? void 0 : currentToken.type);
             const isPreviousTokenIdentifier = this._isIdentifierToken(previousToken === null || previousToken === void 0 ? void 0 : previousToken.type);
             if (isCurrentTokenDot && isPreviousTokenIdentifier) {
-                columns = this.schemaManager.getColumnsFromTableOrView(previousToken.text);
+                const tableName = this.aliasMap.get(previousToken.text) || previousToken.text;
+                columns = this.schemaManager.getColumnsFromTableOrView(tableName);
             }
             // Case 2: Current token is IDENTIFIER, previous is DOT, and one before is IDENTIFIER
             const isCurrentTokenIdentifier = this._isIdentifierToken(currentToken === null || currentToken === void 0 ? void 0 : currentToken.type);
@@ -277,7 +284,8 @@ class SQLAutocomplete {
             if (isCurrentTokenIdentifier &&
                 isPreviousTokenDot &&
                 isTokenBeforePreviousIsIdentifier) {
-                const tableName = tokenBeforePrevious.text;
+                const tableName = this.aliasMap.get(tokenBeforePrevious.text) ||
+                    tokenBeforePrevious.text;
                 columns = this.schemaManager.getColumnsFromTableOrView(tableName);
             }
         }
@@ -296,6 +304,44 @@ class SQLAutocomplete {
     }
     _isIdentifierToken(tokenType) {
         return constants_1.identifierRules.includes(tokenType);
+    }
+    _findNextNonWhitespaceToken(tokenList, startIndex) {
+        const notWhitespaceRegex = /[^\s]/;
+        for (let i = startIndex; i < tokenList.length; i++) {
+            const token = tokenList[i];
+            if (notWhitespaceRegex.test(token.text)) {
+                return { token, index: i };
+            }
+        }
+        return null; // No non-whitespace token found
+    }
+    _buildAliasMap(tokens) {
+        var _a, _b, _c, _d;
+        const aliasMap = new Map();
+        const tokenList = tokens.getTokens();
+        for (let i = 0; i < tokenList.length; i++) {
+            const currentToken = tokenList[i];
+            const nextToken = this._findNextNonWhitespaceToken(tokenList, i + 1);
+            if (!nextToken)
+                return aliasMap;
+            const afterNextToken = this._findNextNonWhitespaceToken(tokenList, nextToken.index + 1);
+            if (!afterNextToken)
+                return aliasMap;
+            if (currentToken && nextToken && afterNextToken) {
+                if (this._isIdentifierToken(currentToken.type) && // table name
+                    ((_b = (_a = nextToken === null || nextToken === void 0 ? void 0 : nextToken.token) === null || _a === void 0 ? void 0 : _a.text) === null || _b === void 0 ? void 0 : _b.toUpperCase()) === "AS" && // optional AS keyword
+                    this._isIdentifierToken((_c = afterNextToken === null || afterNextToken === void 0 ? void 0 : afterNextToken.token) === null || _c === void 0 ? void 0 : _c.type) // alias name
+                ) {
+                    aliasMap.set(afterNextToken.token.text, currentToken.text);
+                }
+                else if (this._isIdentifierToken(currentToken.type) && // table name
+                    this._isIdentifierToken((_d = nextToken === null || nextToken === void 0 ? void 0 : nextToken.token) === null || _d === void 0 ? void 0 : _d.type) // alias without AS
+                ) {
+                    aliasMap.set(nextToken.token.text, currentToken.text);
+                }
+            }
+        }
+        return aliasMap;
     }
 }
 exports.SQLAutocomplete = SQLAutocomplete;
