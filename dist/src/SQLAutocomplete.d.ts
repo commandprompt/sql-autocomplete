@@ -1,4 +1,4 @@
-import { antlr4tsSQL, CommonTokenStream, Parser, SQLDialect } from "antlr4ts-sql";
+import { antlr4tsSQL, CommonTokenStream, Parser, SQLDialect, Token } from "antlr4ts-sql";
 import { AutocompleteOption } from "./models/AutocompleteOption";
 import { AutocompleteOptionType } from "./models/AutocompleteOptionType";
 import { SchemaManager } from "./models/Resources";
@@ -6,6 +6,7 @@ export declare class SQLAutocomplete {
     dialect: SQLDialect;
     antlr4tssql: antlr4tsSQL;
     schemaManager: SchemaManager;
+    aliasMap: Map<string, string>;
     constructor(dialect: SQLDialect, schemas: any[]);
     autocomplete(sqlScript: string, atIndex?: number): AutocompleteOption[];
     _getTokens(sqlScript: string): CommonTokenStream;
@@ -25,4 +26,9 @@ export declare class SQLAutocomplete {
     private _trimQuotes;
     private _isDotToken;
     private _isIdentifierToken;
+    _findNextNonWhitespaceToken(tokenList: Token[], startIndex: number): {
+        token: Token;
+        index: number;
+    } | null;
+    private _buildAliasMap;
 }
