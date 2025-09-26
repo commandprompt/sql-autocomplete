@@ -22,7 +22,8 @@
     "oracle",
     "plpgsql",
     "plsql",
-    "sqlite"
+    "sqlite",
+    "tsql"
   ],
   "author": "modelDBA",
   "license": "MIT",
@@ -32,7 +33,7 @@
   "homepage": "https://modeldba.com/sql-autocomplete",
   "dependencies": {
     "antlr4-c3": "^1.1.15",
-    "antlr4ts-sql": "git://github.com/commandprompt/antlr4ts-sql.git#d81ef285917e185c8488554b3be96851f4c60f68"
+    "antlr4ts-sql": "git://github.com/commandprompt/antlr4ts-sql.git#7ecdc2705aac22f27cbf030ce4cc7306b8f09864"
   },
   "devDependencies": {
     "@types/jest": "^26.0.20",

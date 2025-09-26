@@ -4,6 +4,7 @@ import {
   PlSQLGrammar,
   SQLDialect,
   SQLiteGrammar,
+  TSQLGrammar,
 } from "antlr4ts-sql";
 
 export const tokensToIgnore: Record<SQLDialect, number[]> = {
@@ -45,6 +46,13 @@ export const tokensToIgnore: Record<SQLDialect, number[]> = {
     PlSQLGrammar.PlSqlParser.LEFT_PAREN,
     PlSQLGrammar.PlSqlParser.RIGHT_PAREN,
   ],
+  TSQL: [
+    TSQLGrammar.TSqlParser.DOT,
+    TSQLGrammar.TSqlParser.COMMA,
+    TSQLGrammar.TSqlParser.ID,
+    TSQLGrammar.TSqlParser.LR_BRACKET,
+    TSQLGrammar.TSqlParser.RR_BRACKET,
+  ],
 };
 
 export const preferredRulesForSchema: Record<SQLDialect, number[]> = {
@@ -55,6 +63,7 @@ export const preferredRulesForSchema: Record<SQLDialect, number[]> = {
   ],
   SQLite: [],
   PLSQL: [],
+  TSQL: [TSQLGrammar.TSqlParser.RULE_full_table_name],
 };
 
 export const preferredRulesForTable: Record<SQLDialect, number[]> = {
@@ -74,6 +83,12 @@ export const preferredRulesForTable: Record<SQLDialect, number[]> = {
   PLSQL: [
     PlSQLGrammar.PlSqlParser.RULE_tableview_name,
     PlSQLGrammar.PlSqlParser.RULE_table_element,
+  ],
+  TSQL: [
+    TSQLGrammar.TSqlParser.RULE_table_name,
+    TSQLGrammar.TSqlParser.RULE_full_table_name,
+    TSQLGrammar.TSqlParser.RULE_table_source,
+    TSQLGrammar.TSqlParser.RULE_simple_name,
   ],
 };
 
@@ -98,6 +113,12 @@ export const preferredRulesForColumn: Record<SQLDialect, number[]> = {
     PlSQLGrammar.PlSqlParser.RULE_column_name,
     PlSQLGrammar.PlSqlParser.RULE_general_element,
   ],
+  TSQL: [
+    TSQLGrammar.TSqlParser.RULE_column_alias,
+    TSQLGrammar.TSqlParser.RULE_full_column_name,
+    TSQLGrammar.TSqlParser.RULE_column_definition,
+    TSQLGrammar.TSqlParser.RULE_column_name_list,
+  ],
 };
 
 export const preferredRulesForView: Record<SQLDialect, number[]> = {
@@ -112,16 +133,23 @@ export const preferredRulesForView: Record<SQLDialect, number[]> = {
     SQLiteGrammar.SQLiteParser.RULE_table_name,
   ],
   PLSQL: [PlSQLGrammar.PlSqlParser.RULE_tableview_name],
+  TSQL: [
+    TSQLGrammar.TSqlParser.RULE_table_name,
+    TSQLGrammar.TSqlParser.RULE_simple_name,
+    TSQLGrammar.TSqlParser.RULE_full_table_name,
+  ],
 };
 
 export const dotRules: number[] = [
   MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
   PLpgSQLGrammar.PLpgSQLParser.DOT,
   SQLiteGrammar.SQLiteParser.DOT,
+  TSQLGrammar.TSqlParser.DOT,
 ];
 
 export const identifierRules: number[] = [
   PLpgSQLGrammar.PLpgSQLParser.Identifier,
   MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
   SQLiteGrammar.SQLiteParser.IDENTIFIER,
+  TSQLGrammar.TSqlParser.ID,
 ];

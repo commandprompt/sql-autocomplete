@@ -209,6 +209,8 @@ export class SQLAutocomplete {
       return true;
     } else if (this.dialect === SQLDialect.MYSQL) {
       return true;
+    } else if (this.dialect === SQLDialect.TSQL) {
+      return false; // TSQL grammar SKIPs whitespace
     }
     return true;
   }
