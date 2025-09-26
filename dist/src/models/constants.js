@@ -41,6 +41,13 @@ exports.tokensToIgnore = {
         antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.LEFT_PAREN,
         antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RIGHT_PAREN,
     ],
+    TSQL: [
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.DOT,
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.COMMA,
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.ID,
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.LR_BRACKET,
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.RR_BRACKET,
+    ],
 };
 exports.preferredRulesForSchema = {
     PLpgSQL: [antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_query_schema_name],
@@ -50,6 +57,7 @@ exports.preferredRulesForSchema = {
     ],
     SQLite: [],
     PLSQL: [],
+    TSQL: [antlr4ts_sql_1.TSQLGrammar.TSqlParser.RULE_full_table_name],
 };
 exports.preferredRulesForTable = {
     PLpgSQL: [
@@ -68,6 +76,12 @@ exports.preferredRulesForTable = {
     PLSQL: [
         antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_tableview_name,
         antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_table_element,
+    ],
+    TSQL: [
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.RULE_table_name,
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.RULE_full_table_name,
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.RULE_table_source,
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.RULE_simple_name,
     ],
 };
 exports.preferredRulesForColumn = {
@@ -91,6 +105,12 @@ exports.preferredRulesForColumn = {
         antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_column_name,
         antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_general_element,
     ],
+    TSQL: [
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.RULE_column_alias,
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.RULE_full_column_name,
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.RULE_column_definition,
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.RULE_column_name_list,
+    ],
 };
 exports.preferredRulesForView = {
     PLpgSQL: [antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.RULE_schema_qualified_name],
@@ -104,15 +124,22 @@ exports.preferredRulesForView = {
         antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.RULE_table_name,
     ],
     PLSQL: [antlr4ts_sql_1.PlSQLGrammar.PlSqlParser.RULE_tableview_name],
+    TSQL: [
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.RULE_table_name,
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.RULE_simple_name,
+        antlr4ts_sql_1.TSQLGrammar.TSqlParser.RULE_full_table_name,
+    ],
 };
 exports.dotRules = [
     antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.DOT_SYMBOL,
     antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.DOT,
     antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.DOT,
+    antlr4ts_sql_1.TSQLGrammar.TSqlParser.DOT,
 ];
 exports.identifierRules = [
     antlr4ts_sql_1.PLpgSQLGrammar.PLpgSQLParser.Identifier,
     antlr4ts_sql_1.MySQLGrammar.MultiQueryMySQLParser.IDENTIFIER,
     antlr4ts_sql_1.SQLiteGrammar.SQLiteParser.IDENTIFIER,
+    antlr4ts_sql_1.TSQLGrammar.TSqlParser.ID,
 ];
 //# sourceMappingURL=constants.js.map

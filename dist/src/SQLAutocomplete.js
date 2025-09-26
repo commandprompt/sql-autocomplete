@@ -141,6 +141,9 @@ class SQLAutocomplete {
         else if (this.dialect === antlr4ts_sql_1.SQLDialect.MYSQL) {
             return true;
         }
+        else if (this.dialect === antlr4ts_sql_1.SQLDialect.TSQL) {
+            return false; // TSQL grammar SKIPs whitespace
+        }
         return true;
     }
     _getPreferredRulesForSchema() {
